@@ -25,18 +25,22 @@ mongoose
   .catch((err) => console.error("❌ MongoDB connection error:", err));
 
 // --- API Routes ---
-import userRoutes from "./routes/userRoutes.js";
-import alertRoutes from "./routes/alertRoutes.js";
-import helpRequestRoutes from "./routes/helpRequestRoutes.js";
-import contactRoutes from "./routes/contactRoutes.js";
+// Make sure the filenames match exactly with routes folder
+import usersRoutes from "./routes/users.js";
+import organizerRoutes from "./routes/organizer.js";
+import eventsRoutes from "./routes/events.js";
+import authRoutes from "./routes/auth.js";
+import attendanceRoutes from "./routes/attendance.js";
 
-app.use("/api/users", userRoutes);
-app.use("/api/alerts", alertRoutes);
-app.use("/api/help-requests", helpRequestRoutes);
-app.use("/api/contact", contactRoutes);
+app.use("/api/users", usersRoutes);
+app.use("/api/organizer", organizerRoutes);
+app.use("/api/events", eventsRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/attendance", attendanceRoutes);
 
 // --- Serve Angular frontend in production ---
 if (process.env.NODE_ENV === "production") {
+  // Angular 17+ default build outputPath: dist/frontend-angular
   const angularDistDir = path.join(__dirname, "../frontend-angular/dist/frontend-angular");
 
   if (!fs.existsSync(angularDistDir)) {
