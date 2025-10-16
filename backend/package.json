@@ -3,11 +3,12 @@
   "version": "1.0.0",
   "description": "Backend for Community Service Platform",
   "main": "server.js",
-"scripts": {
-  "start": "node server.js",
-  "build": "cd frontend-angular && npm install --legacy-peer-deps && ng build --configuration production --output-path ../public/browser",
-  "postinstall": "npm run build"
-},
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "build": "cd ../frontend-angular && npm install --legacy-peer-deps && npx ng build --configuration production --output-path ../frontend-angular/dist/frontend-angular",
+    "postinstall": "npm run build"
+  },
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
