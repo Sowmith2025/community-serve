@@ -37,7 +37,7 @@ app.use("/api/contact", contactRoutes);
 
 // --- Serve Angular frontend in production ---
 if (process.env.NODE_ENV === "production") {
-  const angularDistDir = path.join(__dirname, "../frontend-angular/dist/frontend-angular/browser");
+  const angularDistDir = path.join(__dirname, "../frontend-angular/dist/frontend-angular");
 
   if (!fs.existsSync(angularDistDir)) {
     console.error("💥 FATAL ERROR: Angular distribution directory not found!");
