@@ -1,0 +1,94 @@
+<mat-toolbar color="primary">
+  <span>Community Service</span>
+  <span class="spacer"></span>
+  <nav class="nav-links">
+    <a mat-button routerLink="/home">Home</a>
+    <a mat-button routerLink="/events">Events</a>
+    <a mat-button routerLink="/dashboard">Dashboard</a>
+    <a mat-button routerLink="/profile">Profile</a>
+    <a mat-button routerLink="/login" (click)="$event.preventDefault(); logout()">Logout</a>
+    <button mat-button (click)="theme.toggle()" aria-label="Toggle theme">{{ theme.isDark() ? 'Light mode' : 'Dark mode' }}</button>
+  </nav>
+</mat-toolbar>
+
+<div class="container">
+  <h2>Dashboard</h2>
+  <mat-progress-bar *ngIf="loading" mode="indeterminate"></mat-progress-bar>
+  <div class="error" *ngIf="error">{{ error }}</div>
+
+  <div style="margin:16px 0">
+    <h3>Participation</h3>
+    <div style="font-size: 13px; color: var(--text-secondary)">Registered: {{ totalRegistered }} • Attended: {{ totalAttended }} • Rate: {{ participationRate }}%</div>
+    <div style="display:flex; gap:16px; align-items:flex-end; margin-top:12px">
+      <div style="flex:1">
+        <div style="height: 140px; border-left: 1px solid #ccc; border-bottom: 1px solid #ccc; padding: 8px; display:flex; align-items:flex-end">
+          <div title="Registered" [style.width.%]="40" [style.height.%]="(totalRegistered / maxParticipationCount) * 100" style="background:#90caf9"></div>
+          <div title="Attended" [style.width.%]="40" [style.height.%]="(totalAttended / maxParticipationCount) * 100" style="background:#66bb6a; margin-left:8px"></div>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:12px; margin-top:6px">
+          <span>Registered</span>
+          <span>Attended</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin:24px 0">
+    <h3>Monthly Participation</h3>
+    <div style="font-size:12px; color: var(--text-secondary); margin-bottom:6px">Last 6 months</div>
+    <div style="overflow-x:auto">
+      <svg [attr.viewBox]="'0 0 ' + 560 + ' ' + 180" preserveAspectRatio="none" style="width:100%; max-width:720px; height:auto; border:1px solid var(--color-border); border-radius:4px; background:transparent">
+        <!-- Axes -->
+        <line x1="32" y1="164" x2="528" y2="164" stroke="#ccc" stroke-width="1" />
+        <line x1="32" y1="16" x2="32" y2="164" stroke="#ccc" stroke-width="1" />
+
+        <!-- Lines -->
+        <polyline [attr.points]="linePointsRegistered" fill="none" [attr.stroke]="'var(--chart-registered)'" stroke-width="2" />
+        <polyline [attr.points]="linePointsAttended" fill="none" [attr.stroke]="'var(--chart-attended)'" stroke-width="2" />
+
+        <!-- Points -->
+        <ng-container *ngFor="let p of monthlyRegisteredCounts; let i = index">
+          <circle [attr.cx]="32 + ((528-32) * (i / (monthLabels.length - 1)))" [attr.cy]="16 + ((164-16) - (p / monthlyMaxCount) * ((164-16)))" r="3" [attr.fill]="'var(--chart-registered)'"></circle>
+        </ng-container>
+        <ng-container *ngFor="let p of monthlyAttendedCounts; let i = index">
+          <circle [attr.cx]="32 + ((528-32) * (i / (monthLabels.length - 1)))" [attr.cy]="16 + ((164-16) - (p / monthlyMaxCount) * ((164-16)))" r="3" [attr.fill]="'var(--chart-attended)'"></circle>
+        </ng-container>
+
+        <!-- X labels -->
+        <ng-container *ngFor="let m of monthLabels; let i = index">
+          <text [attr.x]="32 + ((528-32) * (i / (monthLabels.length - 1)))" y="176" text-anchor="middle" font-size="10" fill="currentColor">{{ m }}</text>
+        </ng-container>
+
+        <!-- Legend -->
+        <rect x="420" y="22" width="10" height="10" [attr.fill]="'var(--chart-registered)'" />
+        <text x="435" y="31" font-size="10" fill="currentColor">Registered</text>
+        <rect x="420" y="38" width="10" height="10" [attr.fill]="'var(--chart-attended)'" />
+        <text x="435" y="47" font-size="10" fill="currentColor">Attended</text>
+      </svg>
+    </div>
+  </div>
+
+  <h3>Registered Events</h3>
+  <div class="grid">
+    <mat-card *ngFor="let e of registered">
+      <mat-card-title>{{ e.title }}</mat-card-title>
+      <mat-card-content>
+        <p>{{ e.description }}</p>
+        <p>{{ e.date }} {{ e.time }} &#64; {{ e.location }}</p>
+        <p>Status: {{ e.status }}</p>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <h3 style="margin-top:24px">Attended Events</h3>
+  <div class="grid">
+    <mat-card *ngFor="let a of attended">
+      <mat-card-title>{{ a.event?.title }}</mat-card-title>
+      <mat-card-content>
+        <p>Hours: {{ a.hours }}</p>
+        <p>Checked in: {{ a.checkInTime }}</p>
+        <p>Checked out: {{ a.checkOutTime }}</p>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

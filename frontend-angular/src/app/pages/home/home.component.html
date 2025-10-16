@@ -1,0 +1,113 @@
+<mat-toolbar color="primary">
+  <span>Community Service</span>
+  <span class="spacer"></span>
+  <ng-container *ngIf="isLoggedIn; else loggedOutActions">
+    <a mat-button routerLink="/events">Events</a>
+    <a mat-button routerLink="/dashboard">Dashboard</a>
+    <a mat-button routerLink="/profile">Profile</a>
+    <a mat-button routerLink="/login" (click)="$event.preventDefault(); logout()">Logout</a>
+  </ng-container>
+  <ng-template #loggedOutActions>
+    <button mat-flat-button color="primary" class="login-btn" routerLink="/login" aria-label="Log in">
+      Log in
+    </button>
+  </ng-template>
+  <button mat-button (click)="theme.toggle()" aria-label="Toggle theme">
+    {{ theme.isDark() ? 'Light mode' : 'Dark mode' }}
+  </button>
+</mat-toolbar>
+
+<div class="container">
+  <section class="hero">
+    <div class="hero-content">
+      <h1>Make an Impact</h1>
+      <p class="subtitle">Discover community service across Hyderabad and track your contribution.</p>
+      <div class="cta" *ngIf="isLoggedIn; else ctaLoggedOut">
+        <a mat-raised-button color="primary" routerLink="/events">Explore Events</a>
+        <a mat-stroked-button class="ml8" routerLink="/dashboard">View Dashboard</a>
+      </div>
+      <ng-template #ctaLoggedOut>
+        <a mat-raised-button color="primary" routerLink="/login">Get Started</a>
+        <a mat-stroked-button class="ml8" routerLink="/events">Browse Events</a>
+      </ng-template>
+    </div>
+  </section>
+
+  <h2>Welcome!</h2>
+  <p>
+    Discover community service opportunities across Hyderabad and track your impact.
+    Join NSS drives, environmental cleanups, food distribution, literacy programs, and more.
+  </p>
+  <p>
+    - Browse upcoming events and register in one click.<br/>
+    - Check in/out to record hours for your profile and leaderboard.<br/>
+    - View your participation history on the dashboard.
+  </p>
+
+  <div class="grid" style="margin-top:24px">
+    <mat-card>
+      <mat-card-title>How it Works</mat-card-title>
+      <mat-card-content>
+        Register for events, check in/out on the day, and your hours are added to your profile automatically.
+        Your dashboard shows participation and achievements.
+      </mat-card-content>
+    </mat-card>
+    <mat-card>
+      <mat-card-title>Highlights</mat-card-title>
+      <mat-card-content>
+        Hyderabad drives this season: lake cleanup at Hussain Sagar, Annadanam distribution, Swachh Bharat in Old City,
+        and tree planting at Durgam Cheruvu.
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <section class="features">
+    <h3>Why use this platform?</h3>
+    <div class="grid">
+      <mat-card>
+        <mat-card-title>One place for events</mat-card-title>
+        <mat-card-content>
+          Find drives across NSS, environment, community, and literacy—no more scattered WhatsApp messages.
+        </mat-card-content>
+      </mat-card>
+      <mat-card>
+        <mat-card-title>Hours auto-tracked</mat-card-title>
+        <mat-card-content>
+          Check in/out at events and your hours appear on your profile and leaderboard instantly.
+        </mat-card-content>
+      </mat-card>
+      <mat-card>
+        <mat-card-title>Organizer friendly</mat-card-title>
+        <mat-card-content>
+          Create and manage events, track registrations, and view attendance insights at a glance.
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </section>
+
+  <section class="how-it-works">
+    <h3>How it works</h3>
+    <ol>
+      <li>Explore upcoming events and register.</li>
+      <li>On the day, check in and check out.</li>
+      <li>Your hours are added to your profile automatically.</li>
+      <li>Track your participation on the dashboard and climb the leaderboard.</li>
+    </ol>
+  </section>
+
+  <section class="faq">
+    <h3>FAQ</h3>
+    <div class="faq-item">
+      <h4>Do I need to be part of NSS?</h4>
+      <p>No. While many drives are NSS-led, anyone can participate where allowed by organizers.</p>
+    </div>
+    <div class="faq-item">
+      <h4>How are hours calculated?</h4>
+      <p>Hours are based on your check-in and check-out times, validated by organizers.</p>
+    </div>
+    <div class="faq-item">
+      <h4>Can I edit my profile?</h4>
+      <p>Yes—update your name, department, and phone from your profile page.</p>
+    </div>
+  </section>
+</div>

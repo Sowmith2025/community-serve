@@ -1,0 +1,72 @@
+<mat-toolbar color="primary">
+  <span>Community Service</span>
+  <span class="spacer"></span>
+  <a mat-button routerLink="/home">Home</a>
+  <a mat-button routerLink="/events">Events</a>
+  <a mat-button routerLink="/dashboard">Dashboard</a>
+  <a mat-button routerLink="/login" (click)="$event.preventDefault(); logout()">Logout</a>
+  <button mat-button (click)="theme.toggle()" aria-label="Toggle theme">{{ theme.isDark() ? 'Light mode' : 'Dark mode' }}</button>
+</mat-toolbar>
+
+<div class="container page">
+  <mat-card class="profile-card">
+    <mat-card-title>My Profile</mat-card-title>
+    <mat-card-content>
+      <p style="margin-bottom:16px">
+        You have participated in <strong>{{ eventsAttended }}</strong> attended events and registered for
+        <strong>{{ registeredCount }}</strong> upcoming events, contributing a total of
+        <strong>{{ hoursCompleted }}</strong> service hours.
+      </p>
+      <div style="margin: 8px 0 16px">
+        <mat-chip-set *ngIf="badges.length">
+          <mat-chip *ngFor="let b of badges" color="primary" selected>{{ b }}</mat-chip>
+        </mat-chip-set>
+      </div>
+      <form (ngSubmit)="save()" class="profile-form">
+        <mat-form-field appearance="outline">
+          <mat-label>Name</mat-label>
+          <input matInput [(ngModel)]="name" name="name" required />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Phone</mat-label>
+          <input matInput [(ngModel)]="phone" name="phone" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Department</mat-label>
+          <input matInput [(ngModel)]="department" name="department" />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Email</mat-label>
+          <input matInput [value]="email" disabled />
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Role</mat-label>
+          <input matInput [value]="role" disabled />
+        </mat-form-field>
+
+        <button mat-raised-button color="primary" type="submit" [disabled]="saving">
+          {{ saving ? 'Saving...' : 'Save' }}
+        </button>
+        <span style="margin-left:12px">{{ message }}</span>
+      </form>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card class="profile-card" style="margin-top:16px">
+    <mat-card-title>Recent Activity</mat-card-title>
+    <mat-card-content>
+      <h3 style="margin-top:0">Registered</h3>
+      <mat-list>
+        <mat-list-item *ngFor="let e of registered">{{ e.title }} — {{ e.date }} {{ e.time }}</mat-list-item>
+      </mat-list>
+      <h3>Attended</h3>
+      <mat-list>
+        <mat-list-item *ngFor="let a of attendance">{{ a.event?.title || a.eventId }} — {{ a.hours }} hours</mat-list-item>
+      </mat-list>
+    </mat-card-content>
+  </mat-card>
+</div>

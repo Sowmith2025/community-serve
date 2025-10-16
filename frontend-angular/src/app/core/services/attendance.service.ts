@@ -1,0 +1,1 @@
+import { Injectable } from '@angular/core'; import { ApiService } from './api.service'; @Injectable({ providedIn: 'root' }) export class AttendanceService { constructor(private api: ApiService) {} checkIn(data: any) { return this.api.client.post('/attendance/check-in', data); } checkOut(data: any) { return this.api.client.post('/attendance/check-out', data); } }

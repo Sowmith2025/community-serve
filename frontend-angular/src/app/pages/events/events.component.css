@@ -1,0 +1,18 @@
+/* Event page polish */
+.events .event-card mat-card-title {
+  font-size: 18px;
+}
+
+.events .event-card p {
+  margin: 0 0 6px 0;
+}
+
+.events .event-card {
+  transition: transform 140ms ease;
+}
+
+.events .event-card:hover {
+  transform: translateY(-2px);
+}
+
+

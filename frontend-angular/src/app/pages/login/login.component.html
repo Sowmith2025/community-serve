@@ -1,0 +1,41 @@
+<mat-toolbar color="primary">
+  <span>Community Service</span>
+  <span class="spacer"></span>
+  <a mat-button (click)="navigateToHome()">Home</a>
+</mat-toolbar>
+
+<div class="login-container">
+  <h2>{{ isSignup ? 'Sign Up' : 'Login' }}</h2>
+  <form (ngSubmit)="onSubmit()" class="login-form">
+    <div style="margin-bottom: 12px;">
+      <label style="display:block; margin-bottom:6px;">Select Role</label>
+      <mat-button-toggle-group [(ngModel)]="role" name="role" aria-label="User role" appearance="legacy">
+        <mat-button-toggle value="student">Student</mat-button-toggle>
+        <mat-button-toggle value="organizer">Organizer</mat-button-toggle>
+      </mat-button-toggle-group>
+    </div>
+    <mat-form-field appearance="outline" *ngIf="isSignup">
+      <mat-label>Name</mat-label>
+      <input matInput placeholder="Name" [(ngModel)]="name" name="name" required />
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Email</mat-label>
+      <input matInput placeholder="Email" [(ngModel)]="email" name="email" required />
+    </mat-form-field>
+    <mat-form-field appearance="outline">
+      <mat-label>Password</mat-label>
+      <input matInput placeholder="Password" [(ngModel)]="password" name="password" type="password" required />
+    </mat-form-field>
+    <mat-form-field appearance="outline" *ngIf="isSignup">
+      <mat-label>Confirm Password</mat-label>
+      <input matInput placeholder="Confirm Password" [(ngModel)]="confirmPassword" name="confirmPassword" type="password" required />
+    </mat-form-field>
+    <button mat-raised-button color="primary" type="submit" [disabled]="loading">
+      {{ loading ? (isSignup ? 'Signing up...' : 'Logging in...') : (isSignup ? 'Sign Up' : 'Login') }}
+    </button>
+    <button mat-stroked-button type="button" (click)="isSignup = !isSignup" style="margin-left: 8px">
+      {{ isSignup ? 'Already have account? Login' : 'Need account? Sign Up' }}
+    </button>
+    <div class="error" *ngIf="error">{{ error }}</div>
+  </form>
+</div>

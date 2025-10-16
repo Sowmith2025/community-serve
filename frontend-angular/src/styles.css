@@ -1,0 +1,242 @@
+/* You can add global styles to this file, and also import other style files */
+@import '@angular/material/prebuilt-themes/indigo-pink.css';
+
+/* Color System */
+:root {
+  --color-primary: #4f46e5; /* indigo-600 */
+  --color-primary-contrast: #ffffff;
+  --color-accent: #22c55e; /* emerald-500 */
+  --color-warn: #ef4444; /* red-500 */
+  --color-text: #0f172a; /* slate-900 */
+  --color-text-muted: #475569; /* slate-600 */
+  --color-bg: #f8fafc; /* slate-50 */
+  --color-card: #ffffff;
+  --color-border: #e2e8f0; /* slate-200 */
+  --chart-registered: #42a5f5;
+  --chart-attended: #66bb6a;
+}
+
+.dark-theme {
+  --color-primary: #a78bfa; /* violet-400 brighter */
+  --color-primary-contrast: #0b0b0b;
+  --color-accent: #34d399; /* emerald-400 */
+  --color-warn: #f87171; /* red-400 */
+  --color-text: #f3f4f6; /* gray-100 brighter */
+  --color-text-muted: #cbd5e1; /* slate-300 */
+  --color-bg: #111827; /* gray-900 brighter than near black */
+  --color-card: #1f2937; /* slate-800 */
+  --color-border: #374151; /* gray-700 */
+  --chart-registered: #60a5fa;
+  --chart-attended: #34d399;
+}
+html, body {
+  height: 100%;
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+.container {
+  max-width: 960px;
+  margin: 24px auto;
+  padding: 0 16px;
+}
+
+.spacer { flex: 1 1 auto; }
+
+.nav-links a[mat-button] {
+  margin-left: 8px;
+  color: var(--color-primary-contrast);
+  text-decoration: none;
+  opacity: 0.95;
+}
+
+.nav-links a[mat-button]:hover {
+  opacity: 1;
+  background: rgba(255,255,255,0.14);
+  border-radius: 4px;
+}
+
+.login-container {
+  max-width: 400px;
+  margin: 64px auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.event-card { min-height: 160px; }
+
+/* Professional spacing and typography */
+h2 { font-weight: 500; margin: 16px 0; }
+h3 { font-weight: 500; margin: 16px 0 8px; }
+p { line-height: 1.6; }
+
+/* Toolbar */
+mat-toolbar {
+  background: var(--color-primary) !important;
+  color: var(--color-primary-contrast) !important;
+}
+mat-toolbar a[mat-button] { color: var(--color-primary-contrast); text-decoration: none; }
+mat-toolbar a[mat-button].active { background: rgba(255,255,255,0.18); }
+mat-toolbar button[mat-button] { color: var(--color-primary-contrast); }
+
+/* Cards */
+mat-card { background: var(--color-card); color: var(--color-text); border: 1px solid var(--color-border); }
+mat-card-title { font-weight: 600; }
+mat-card {
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(2,6,23,0.04), 0 6px 16px rgba(2,6,23,0.06);
+}
+mat-card:hover {
+  box-shadow: 0 3px 8px rgba(2,6,23,0.06), 0 12px 24px rgba(2,6,23,0.10);
+  transition: box-shadow 160ms ease;
+}
+
+/* Buttons */
+.mat-mdc-raised-button.mat-primary { background: var(--color-primary); color: var(--color-primary-contrast); }
+.mat-mdc-stroked-button:not(.mat-warn) { border-color: var(--color-border); color: var(--color-text); }
+.mat-mdc-outlined-button.mat-primary { color: var(--color-primary); }
+.mat-mdc-raised-button.mat-accent { background: var(--color-accent); color: #0b0b0b; }
+.mat-mdc-raised-button.mat-warn { background: var(--color-warn); color: #ffffff; }
+.mat-mdc-raised-button, .mat-mdc-stroked-button, .mat-mdc-outlined-button {
+  border-radius: 10px !important;
+}
+button[mat-raised-button]:hover, a[mat-raised-button]:hover {
+  filter: brightness(1.02);
+}
+
+/* Footer */
+.site-footer {
+  margin-top: 40px;
+  padding: 16px;
+  border-top: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+/* Inputs */
+.mat-mdc-form-field .mdc-notched-outline__leading,
+.mat-mdc-form-field .mdc-notched-outline__notch,
+.mat-mdc-form-field .mdc-notched-outline__trailing { border-color: var(--color-border) !important; }
+.mat-mdc-form-field-label { color: var(--color-text-muted) !important; }
+.mat-mdc-input-element { color: var(--color-text) !important; }
+
+/* Dark theme overrides */
+.dark-theme { background: var(--color-bg); color: var(--color-text); }
+.dark-theme, 
+.dark-theme body, 
+.dark-theme p, 
+.dark-theme h1, 
+.dark-theme h2, 
+.dark-theme h3, 
+.dark-theme h4, 
+.dark-theme h5, 
+.dark-theme h6, 
+.dark-theme a, 
+.dark-theme span, 
+.dark-theme label { color: var(--color-text); }
+.dark-theme mat-toolbar { background: var(--color-primary) !important; color: var(--color-primary-contrast) !important; }
+.dark-theme mat-card { background: var(--color-card); color: var(--color-text); }
+.dark-theme .mat-mdc-outlined-button.mat-primary { color: var(--color-primary); }
+.dark-theme .mat-mdc-raised-button.mat-primary { background: var(--color-primary); color: var(--color-primary-contrast); }
+.dark-theme a[mat-button] { color: var(--color-text); }
+
+/* Login role toggle - brighten in dark mode */
+.dark-theme mat-button-toggle-group {
+  border-color: var(--color-border) !important;
+}
+.dark-theme mat-button-toggle {
+  background: var(--color-card);
+  color: var(--color-text);
+  border-right: 1px solid var(--color-border);
+}
+.dark-theme mat-button-toggle.mat-button-toggle-checked,
+.dark-theme mat-button-toggle[aria-pressed="true"] {
+  background: var(--color-primary) !important;
+  color: var(--color-primary-contrast) !important;
+}
+.dark-theme mat-button-toggle:hover {
+  filter: brightness(1.1);
+}
+
+/* Create Event form - ensure high contrast text in dark theme */
+.dark-theme .create-event .mat-mdc-input-element {
+  color: #ffffff !important;
+}
+.dark-theme .create-event .mat-mdc-input-element::placeholder {
+  color: #cbd5e1 !important;
+  opacity: 1 !important;
+}
+.dark-theme .create-event .mat-mdc-form-field-label {
+  color: #e5e7eb !important;
+  opacity: 0.95 !important;
+}
+/* Ensure floating/static labels and hints are bright */
+.dark-theme .create-event .mat-mdc-form-field .mdc-floating-label {
+  color: #ffffff !important;
+  opacity: 1 !important;
+}
+.dark-theme .create-event .mat-mdc-form-field-hint-wrapper,
+.dark-theme .create-event .mat-mdc-form-field-subscript-wrapper {
+  color: #e5e7eb !important;
+}
+/* Remove any dark overlay that may dim text on focus */
+.dark-theme .create-event .mat-mdc-form-field-focus-overlay {
+  background: transparent !important;
+}
+/* Also force darker input backgrounds and clearer outlines in dark theme */
+.dark-theme .create-event .mdc-text-field__input {
+  background-color: #0f0f10 !important;
+  caret-color: #ffffff !important;
+}
+.dark-theme .create-event .mat-mdc-form-field-infix {
+  background-color: #0f0f10 !important;
+}
+.dark-theme .create-event .mdc-notched-outline__leading,
+.dark-theme .create-event .mdc-notched-outline__notch,
+.dark-theme .create-event .mdc-notched-outline__trailing {
+  border-color: #475569 !important; /* slate-600 */
+}
+
+/* Global dark-mode form readability (all pages) */
+.dark-theme .mat-mdc-form-field .mdc-notched-outline__leading,
+.dark-theme .mat-mdc-form-field .mdc-notched-outline__notch,
+.dark-theme .mat-mdc-form-field .mdc-notched-outline__trailing {
+  border-color: var(--color-border) !important;
+}
+.dark-theme .mat-mdc-form-field-label,
+.dark-theme .mat-mdc-form-field .mdc-floating-label {
+  color: var(--color-text-muted) !important;
+}
+.dark-theme .mat-mdc-input-element {
+  color: var(--color-text) !important;
+}
+.dark-theme .mat-mdc-input-element::placeholder {
+  color: var(--color-text-muted) !important;
+  opacity: 1 !important;
+}
+/* Material component text that can appear muted by default */
+.dark-theme .mat-mdc-card-subtitle,
+.dark-theme .mat-mdc-list-item-title,
+.dark-theme .mat-mdc-list-item-line,
+.dark-theme .mdc-list-item__primary-text,
+.dark-theme .mdc-list-item__secondary-text,
+.dark-theme .mat-mdc-chip {
+  color: var(--color-text) !important;
+}
+.dark-theme ::placeholder { color: var(--color-text-muted) !important; opacity: 1 !important; }

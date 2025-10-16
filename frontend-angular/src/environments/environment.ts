@@ -1,0 +1,1 @@
+export const environment = { production: true, apiBaseUrl: (window as any).__APP_API__ || 'http://localhost:5000' };

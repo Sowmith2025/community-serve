@@ -1,0 +1,69 @@
+<mat-toolbar color="primary">
+  <span>Community Service</span>
+  <span class="spacer"></span>
+  <a mat-button routerLink="/home">Home</a>
+  <a mat-button routerLink="/profile">Profile</a>
+  <a mat-button routerLink="/dashboard">Dashboard</a>
+  <a mat-button routerLink="/login" (click)="$event.preventDefault(); logout()">Logout</a>
+  <button mat-button (click)="theme.toggle()" aria-label="Toggle theme">{{ theme.isDark() ? 'Light mode' : 'Dark mode' }}</button>
+</mat-toolbar>
+
+<div class="events container">
+  <h2>Events</h2>
+  <mat-progress-bar *ngIf="loading" mode="indeterminate"></mat-progress-bar>
+  <div class="error" *ngIf="error">{{ error }}</div>
+  <div *ngIf="isOrganizer" class="create-event" style="margin-bottom:16px; padding:12px; border:1px solid #ddd; border-radius:8px;">
+    <h3>Create New Event</h3>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+      <mat-form-field appearance="outline" floatLabel="always">
+        <mat-label>Title</mat-label>
+        <input matInput [(ngModel)]="newEvent.title" name="title" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" floatLabel="always">
+        <mat-label>Date</mat-label>
+        <input matInput type="date" [(ngModel)]="newEvent.date" name="date" placeholder="YYYY-MM-DD" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" floatLabel="always">
+        <mat-label>Time</mat-label>
+        <input matInput type="time" [(ngModel)]="newEvent.time" name="time" placeholder="HH:MM" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" floatLabel="always">
+        <mat-label>Location</mat-label>
+        <input matInput [(ngModel)]="newEvent.location" name="location" />
+      </mat-form-field>
+      <mat-form-field appearance="outline" style="grid-column:1/-1;">
+        <mat-label>Description</mat-label>
+        <input matInput [(ngModel)]="newEvent.description" name="description" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Max Volunteers</mat-label>
+        <input matInput type="number" [(ngModel)]="newEvent.maxVolunteers" name="maxVolunteers" />
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Category</mat-label>
+        <input matInput [(ngModel)]="newEvent.category" name="category" />
+      </mat-form-field>
+    </div>
+    <button mat-raised-button color="accent" (click)="createEvent()" [disabled]="creating">
+      {{ creating ? 'Creating...' : 'Create Event' }}
+    </button>
+  </div>
+  <div class="grid" *ngIf="!loading && !error">
+    <mat-card *ngFor="let e of events" class="event-card">
+      <mat-card-title>{{ e.title }}</mat-card-title>
+      <mat-card-content>
+        <p>{{ e.description }}</p>
+        <p>{{ e.date }} {{ e.time }} &#64; {{ e.location }}</p>
+      </mat-card-content>
+      <div style="padding: 0 16px 16px">
+        <button *ngIf="!registeredSet.has(e.id)" mat-raised-button color="primary" (click)="register(e.id)" [disabled]="registering[e.id]">
+          {{ registering[e.id] ? 'Registering...' : 'Register' }}
+        </button>
+        <div *ngIf="registeredSet.has(e.id)" style="display: flex; align-items: center; gap: 8px; color: #4caf50; font-weight: 500;">
+          <mat-icon>check_circle</mat-icon>
+          <span>Registered</span>
+        </div>
+      </div>
+    </mat-card>
+  </div>
+</div>
