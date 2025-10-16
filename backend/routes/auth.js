@@ -1,20 +1,20 @@
-const express = require('express');
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
-const { v4: uuidv4 } = require('uuid');
-const { users } = require('../data/mockData');
+import express from "express";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
+import { v4 as uuidv4 } from "uuid";
+import { users } from "../data/mockData.js";
 
 const router = express.Router();
 
 // Register
-router.post('/register', async (req, res) => {
+router.post("/register", async (req, res) => {
   try {
-    const { name, email, password, role = 'student' } = req.body;
+    const { name, email, password, role = "student" } = req.body;
 
     // Check if user exists
     const existingUser = users.find(user => user.email === email);
     if (existingUser) {
-      return res.status(400).json({ message: 'User already exists' });
+      return res.status(400).json({ message: "User already exists" });
     }
 
     // Hash password
@@ -37,12 +37,12 @@ router.post('/register', async (req, res) => {
     // Generate token
     const token = jwt.sign(
       { userId: newUser.id, email: newUser.email, role: newUser.role },
-      process.env.JWT_SECRET || 'fallback-secret-key',
-      { expiresIn: '7d' }
+      process.env.JWT_SECRET || "fallback-secret-key",
+      { expiresIn: "7d" }
     );
 
     res.status(201).json({
-      message: 'User created successfully',
+      message: "User created successfully",
       token,
       user: {
         id: newUser.id,
@@ -53,36 +53,36 @@ router.post('/register', async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 });
 
 // Login
-router.post('/login', async (req, res) => {
+router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
     // Find user
     const user = users.find(user => user.email === email);
     if (!user) {
-      return res.status(400).json({ message: 'Invalid credentials' });
+      return res.status(400).json({ message: "Invalid credentials" });
     }
 
     // Check password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({ message: 'Invalid credentials' });
+      return res.status(400).json({ message: "Invalid credentials" });
     }
 
     // Generate token
     const token = jwt.sign(
       { userId: user.id, email: user.email, role: user.role },
-      process.env.JWT_SECRET || 'fallback-secret-key',
-      { expiresIn: '7d' }
+      process.env.JWT_SECRET || "fallback-secret-key",
+      { expiresIn: "7d" }
     );
 
     res.json({
-      message: 'Login successful',
+      message: "Login successful",
       token,
       user: {
         id: user.id,
@@ -93,8 +93,8 @@ router.post('/login', async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 });
 
-module.exports = router;
+export default router;

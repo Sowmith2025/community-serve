@@ -1,11 +1,11 @@
-const express = require('express');
-const { v4: uuidv4 } = require('uuid');
-const { events, users, registrations } = require('../data/mockData');
+import express from "express";
+import { v4 as uuidv4 } from "uuid";
+import { events, registrations } from "../data/mockData.js";
 
 const router = express.Router();
 
 // Get events created by organizer
-router.get('/my-events/:organizerId', (req, res) => {
+router.get("/my-events/:organizerId", (req, res) => {
   try {
     const organizerEvents = events.filter(event => event.organizerId === req.params.organizerId);
     
@@ -15,18 +15,18 @@ router.get('/my-events/:organizerId', (req, res) => {
         ...event,
         registeredCount: eventRegistrations.length,
         attendanceRate: eventRegistrations.length > 0 ? 
-          (eventRegistrations.filter(r => r.status === 'attended').length / eventRegistrations.length * 100).toFixed(1) : 0
+          (eventRegistrations.filter(r => r.status === "attended").length / eventRegistrations.length * 100).toFixed(1) : 0
       };
     });
 
     res.json(eventsWithStats);
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 });
 
 // Create new event
-router.post('/events', (req, res) => {
+router.post("/events", (req, res) => {
   try {
     const { title, description, date, time, location, maxVolunteers, organizerId, category } = req.body;
 
@@ -39,24 +39,24 @@ router.post('/events', (req, res) => {
       location,
       maxVolunteers: maxVolunteers || 20,
       organizerId,
-      category: category || 'general',
+      category: category || "general",
       createdAt: new Date().toISOString(),
-      status: 'upcoming'
+      status: "upcoming"
     };
 
     events.push(newEvent);
 
     res.status(201).json({
-      message: 'Event created successfully',
+      message: "Event created successfully",
       event: newEvent
     });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 });
 
 // Get event analytics
-router.get('/analytics/:organizerId', (req, res) => {
+router.get("/analytics/:organizerId", (req, res) => {
   try {
     const organizerEvents = events.filter(event => event.organizerId === req.params.organizerId);
     
@@ -65,14 +65,14 @@ router.get('/analytics/:organizerId', (req, res) => {
       totalVolunteers: registrations.filter(reg => 
         organizerEvents.some(event => event.id === reg.eventId)
       ).length,
-      upcomingEvents: organizerEvents.filter(event => event.status === 'upcoming').length,
-      completedEvents: organizerEvents.filter(event => event.status === 'completed').length,
+      upcomingEvents: organizerEvents.filter(event => event.status === "upcoming").length,
+      completedEvents: organizerEvents.filter(event => event.status === "completed").length,
       popularCategory: getPopularCategory(organizerEvents)
     };
 
     res.json(analytics);
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: "Server error", error: error.message });
   }
 });
 
@@ -81,7 +81,7 @@ function getPopularCategory(events) {
   events.forEach(event => {
     categories[event.category] = (categories[event.category] || 0) + 1;
   });
-  return Object.keys(categories).reduce((a, b) => categories[a] > categories[b] ? a : b, 'general');
+  return Object.keys(categories).reduce((a, b) => categories[a] > categories[b] ? a : b, "general");
 }
 
-module.exports = router;
+export default router;
