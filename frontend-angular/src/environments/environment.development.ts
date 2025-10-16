@@ -1,1 +1,1 @@
-export const environment = { production: false, apiBaseUrl: (window as any).__APP_API__ || 'http://localhost:5000' };
+export const environment = { production: false, apiBaseUrl: (window as any).__APP_API__ || 'https://community-service-49e1.onrender.com' };

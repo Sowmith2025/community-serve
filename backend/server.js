@@ -41,20 +41,16 @@ app.get('/api/health', (req, res) => {
 // Serve static files in production
 if (process.env.NODE_ENV === 'production') {
   // Prefer Angular build if available; otherwise fall back to React build
-  const angularDistDir = path.join(__dirname, '../frontend-angular/dist/frontend-angular');
-  const reactBuildDir = path.join(__dirname, '../frontend/build');
+  const angularDistDir = path.join(__dirname,"public", "browser");
+  const reactBuildDir = path.join(__dirname, '../frontend-angular/build');
 
   const useAngular = fs.existsSync(angularDistDir);
   const staticDir = useAngular ? angularDistDir : reactBuildDir;
 
-  app.use(express.static(staticDir));
-
-  app.get('*', (req, res) => {
-    const indexFile = useAngular
-      ? path.join(angularDistDir, 'index.html')
-      : path.join(reactBuildDir, 'index.html');
-    res.sendFile(indexFile);
-  });
+  app.use(express.static(path.join(__dirname, '../frontend-angular/dist/frontend-angular')));
+ app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, '../frontend-angular/dist/frontend-angular/index.html'));
+});
 }
 
 const PORT = process.env.PORT || 5000;
