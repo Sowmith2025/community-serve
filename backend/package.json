@@ -3,9 +3,10 @@
   "version": "1.0.0",
   "description": "Backend for Community Service Platform",
   "main": "server.js",
-  "scripts": {
+"scripts": {
   "start": "node server.js",
-  "build": "cd frontend-angular && npm install && ng build --configuration production" 
+  "build": "cd frontend-angular && npm install --legacy-peer-deps && ng build --configuration production --output-path ../public/browser",
+  "postinstall": "npm run build"
 },
   "dependencies": {
     "bcryptjs": "^2.4.3",
