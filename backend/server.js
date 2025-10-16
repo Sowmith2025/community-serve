@@ -1,7 +1,7 @@
 import express from "express";
 import path from "path";
-import mongoose from "mongoose";
 import dotenv from "dotenv";
+import mongoose from "mongoose";
 import cors from "cors";
 import { fileURLToPath } from "url";
 import fs from "fs";
@@ -38,7 +38,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/attendance", attendanceRoutes);
 
 // --- Serve Angular frontend if exists ---
-const angularDistDir = path.join(__dirname, "../frontend-angular/dist/frontend-angular");
+const angularDistDir = path.join(__dirname, "../frontend-angular/dist/frontend-angular//browser");
 
 if (fs.existsSync(angularDistDir)) {
   app.use(express.static(angularDistDir));
