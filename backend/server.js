@@ -25,7 +25,6 @@ mongoose
   .catch((err) => console.error("❌ MongoDB connection error:", err));
 
 // --- API Routes ---
-// Make sure the filenames match exactly with routes folder
 import usersRoutes from "./routes/users.js";
 import organizerRoutes from "./routes/organizer.js";
 import eventsRoutes from "./routes/events.js";
@@ -38,21 +37,16 @@ app.use("/api/events", eventsRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/attendance", attendanceRoutes);
 
-// --- Serve Angular frontend in production ---
-if (process.env.NODE_ENV === "production") {
-  // Angular 17+ default build outputPath: dist/frontend-angular
-  const angularDistDir = path.join(__dirname, "../frontend-angular/dist/frontend-angular");
+// --- Serve Angular frontend if exists ---
+const angularDistDir = path.join(__dirname, "../frontend-angular/dist/frontend-angular");
 
-  if (!fs.existsSync(angularDistDir)) {
-    console.error("💥 FATAL ERROR: Angular distribution directory not found!");
-    process.exit(1);
-  }
-
+if (fs.existsSync(angularDistDir)) {
   app.use(express.static(angularDistDir));
-
   app.get("*", (req, res) => {
     res.sendFile(path.join(angularDistDir, "index.html"));
   });
+} else {
+  console.warn("⚠️ Angular build not found. Frontend will not be served.");
 }
 
 // --- Start server ---

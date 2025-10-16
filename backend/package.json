@@ -2,14 +2,13 @@
   "name": "community-service-backend",
   "version": "1.0.0",
   "description": "Backend for Community Service Platform",
-  "main": "server.js",
   "type": "module",
-"scripts": {
-  "start": "node server.js",
-  "build": "cd frontend-angular && npm install && ng build --configuration production",
-  "postinstall": "npm run build"
-}
-,
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "build-frontend": "cd ../frontend-angular && npm install --legacy-peer-deps && ng build --configuration production",
+    "postinstall": "npm run build-frontend"
+  },
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
@@ -21,12 +20,5 @@
   },
   "devDependencies": {
     "nodemon": "^3.0.1"
-  },
-  "keywords": [
-    "community",
-    "service",
-    "volunteer"
-  ],
-  "author": "Student",
-  "license": "MIT"
+  }
 }
