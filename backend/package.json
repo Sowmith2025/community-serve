@@ -4,10 +4,9 @@
   "description": "Backend for Community Service Platform",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "build": "npm install",
-    "dev": "nodemon server.js"
-  },
+  "start": "node server.js",
+  "build": "cd frontend-angular && npm install && ng build --configuration production" 
+},
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
