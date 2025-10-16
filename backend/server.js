@@ -1,96 +1,58 @@
-// Load environment variables
-require('dotenv').config();
+import express from "express";
+import path from "path";
+import mongoose from "mongoose";
+import dotenv from "dotenv";
+import cors from "cors";
+import { fileURLToPath } from "url";
+import fs from "fs";
 
-const express = require('express');
-const cors = require('cors');
-const path = require('path');
-const fs = require('fs');
-
-// Database connection
-const connectDB = require('./config/database');
-
-const authRoutes = require('./routes/auth');
-const eventRoutes = require('./routes/events');
-const userRoutes = require('./routes/users');
-const attendanceRoutes = require('./routes/attendance');
-const organizerRoutes = require('./routes/organizer');
+dotenv.config();
 
 const app = express();
 
+// Setup __dirname for ES Modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 // Middleware
-app.use(cors());
 app.use(express.json());
+app.use(cors({ credentials: true }));
 
-// Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/events', eventRoutes);
-app.use('/api/users', userRoutes);
-app.use('/api/attendance', attendanceRoutes);
+// --- MongoDB connection ---
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log("✅ MongoDB connected"))
+  .catch((err) => console.error("❌ MongoDB connection error:", err));
 
-app.use('/api/organizer', organizerRoutes);
+// --- API Routes ---
+import userRoutes from "./routes/userRoutes.js";
+import alertRoutes from "./routes/alertRoutes.js";
+import helpRequestRoutes from "./routes/helpRequestRoutes.js";
+import contactRoutes from "./routes/contactRoutes.js";
 
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'OK',
-    message: 'Community Service API is running!',
-    timestamp: new Date().toISOString()
-  });
-});
+app.use("/api/users", userRoutes);
+app.use("/api/alerts", alertRoutes);
+app.use("/api/help-requests", helpRequestRoutes);
+app.use("/api/contact", contactRoutes);
 
-// Serve static files in production
-if (process.env.NODE_ENV === 'production') {
-  // Define the EXACT path to the Angular build output directory (the folder containing index.html and assets)
-  // This path assumes 'server.js' and 'frontend-angular' are both directly under the project root (e.g., /src).
-  const angularDistDir = path.join(__dirname, 'frontend-angular/dist/frontend-angular/browser');
-  const indexHtmlPath = path.join(angularDistDir, 'index.html');
+// --- Serve Angular frontend in production ---
+if (process.env.NODE_ENV === "production") {
+  const angularDistDir = path.join(__dirname, "../frontend-angular/dist/frontend-angular/browser");
 
-  // CRITICAL CHECK: Ensure the build directory exists before trying to serve from it
   if (!fs.existsSync(angularDistDir)) {
-    console.error(`\n==================================================================`);
-    console.error(`💥 FATAL ERROR: Angular distribution directory not found!`);
-    console.error(`Expected Directory: ${angularDistDir}`);
-    console.error(`\nACTIONS REQUIRED:`);
-    console.error(`1. Ensure your deployment's BUILD COMMAND is running successfully (e.g., 'ng build').`);
-    console.error(`2. Verify the 'outputPath' in your angular.json file matches the structure above.`);
-    console.error(`==================================================================\n`);
-    // Note: The server will still start, but the frontend will fail to load until the build runs.
-  } else {
-    // 1. Serve all static files (CSS, JS, images) from the angular build directory.
-    app.use(express.static(angularDistDir));
-
-    // 2. For all other routes ('*'), which are likely Angular client-side routes,
-    // serve the single entry point: index.html.
-    app.get('*', (req, res) => {
-      // We send index.html directly from the build directory defined above.
-      res.sendFile(indexHtmlPath, (err) => {
-        if (err) {
-          // Fallback error response if index.html is missing inside the existing folder
-          console.error(`Error serving index.html at ${indexHtmlPath}:`, err.message);
-          res.status(500).send("The front-end application failed to load.");
-        }
-      });
-    });
-  }
-}
-
-const PORT = process.env.PORT || 5000;
-
-// Connect to MongoDB and start server
-const startServer = async () => {
-  try {
-    // Connect to MongoDB
-    await connectDB();
-
-    // Start the server
-    app.listen(PORT, () => {
-      console.log(`🚀 Server running on port ${PORT}`);
-      console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
-    });
-  } catch (error) {
-    console.error('Failed to start server:', error);
+    console.error("💥 FATAL ERROR: Angular distribution directory not found!");
     process.exit(1);
   }
-};
 
-startServer();
+  app.use(express.static(angularDistDir));
+
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(angularDistDir, "index.html"));
+  });
+}
+
+// --- Start server ---
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+});
