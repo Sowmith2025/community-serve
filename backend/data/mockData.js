@@ -1,7 +1,7 @@
-const { v4: uuidv4 } = require('uuid');
+// backend/data/mockData.js
+import { v4 as uuidv4 } from 'uuid';
 
-// Mock database
-const users = [
+export const users = [
   {
     id: 'user-1',
     name: 'Arjun Kumar',
@@ -28,7 +28,7 @@ const users = [
   }
 ];
 
-const events = [
+export const events = [
   {
     id: 'event-1',
     title: 'Hussain Sagar Lake Cleanup',
@@ -135,7 +135,7 @@ const events = [
   }
 ];
 
-const registrations = [
+export const registrations = [
   {
     id: 'reg-1',
     eventId: 'event-1',
@@ -166,7 +166,7 @@ const registrations = [
   }
 ];
 
-const attendance = [
+export const attendance = [
   {
     id: 'att-1',
     userId: 'user-1',
@@ -177,10 +177,3 @@ const attendance = [
     status: 'completed'
   }
 ];
-
-module.exports = {
-  users,
-  events,
-  registrations,
-  attendance
-};
