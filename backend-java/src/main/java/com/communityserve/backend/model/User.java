@@ -31,6 +31,7 @@ public class User {
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_events", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "event_id")
+    @OrderColumn(name = "event_order")
     private List<String> eventsAttended = new ArrayList<>();
 
     private String joinedAt;
