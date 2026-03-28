@@ -1,33 +1,37 @@
-// Gemini AI Service — wraps Google Generative Language REST API
-// Uses the free gemini-1.5-flash model to keep costs at zero.
-// The API key is read from the VITE_GEMINI_API_KEY env variable.
+// AI Service — wraps NVIDIA NIM (OpenAI-compatible) API
+// Uses meta/llama-3.1-8b-instruct to keep costs at zero using free credits.
+// The API key is read from the VITE_NVIDIA_API_KEY env variable.
 
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-// Triggering Vercel rebuild for API Key injection
-const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+const NVIDIA_API_KEY = (import.meta.env.VITE_NVIDIA_API_KEY || '').trim();
+const API_URL = "https://integrate.api.nvidia.com/v1/chat/completions";
 
 /**
- * Send a single text prompt to Gemini and return the response text.
+ * Send a single text prompt to NVIDIA API and return the response text.
  * @param {string} prompt
  * @returns {Promise<string>}
  */
-async function askGemini(prompt) {
-  const res = await fetch(GEMINI_URL, {
+async function askAI(prompt) {
+  const res = await fetch(API_URL, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${NVIDIA_API_KEY}`
+    },
     body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.7, maxOutputTokens: 512 },
+      model: "meta/llama-3.1-8b-instruct",
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.7,
+      max_tokens: 512,
     }),
   });
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err?.error?.message || `Gemini API error: ${res.status}`);
+    throw new Error(err?.detail || `NVIDIA API error: ${res.status}`);
   }
 
   const data = await res.json();
-  return data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? '';
+  return data?.choices?.[0]?.message?.content?.trim() ?? '';
 }
 
 /**
@@ -48,7 +52,7 @@ Organizer Notes: ${notes || 'No additional notes.'}
 
 Write ONLY the description — no headings, no bullet points, no markdown. Make it motivating for students to sign up.`;
 
-  return askGemini(prompt);
+  return askAI(prompt);
 }
 
 /**
@@ -70,7 +74,7 @@ Statistics:
 
 Respond ONLY with a valid JSON array, e.g.: ["Insight 1.", "Insight 2.", "Insight 3."]`;
 
-  const text = await askGemini(prompt);
+  const text = await askAI(prompt);
   // Extract JSON array from response (guard against markdown code fences)
   const match = text.match(/\[[\s\S]*\]/);
   if (!match) return ['Could not parse insights. Please try again.'];
