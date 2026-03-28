@@ -3,7 +3,7 @@
 // The API key is read from the VITE_NVIDIA_API_KEY env variable.
 
 const NVIDIA_API_KEY = (import.meta.env.VITE_NVIDIA_API_KEY || '').trim();
-const API_URL = "https://integrate.api.nvidia.com/v1/chat/completions";
+const API_URL = "/api/nvidia/v1/chat/completions";
 
 /**
  * Send a single text prompt to NVIDIA API and return the response text.
