@@ -170,11 +170,7 @@ export default function EventDetails() {
         {success && <div style={{ color: '#10b981', marginBottom: '1rem', padding: '1rem', background: 'rgba(16, 185, 129, 0.1)', borderRadius: 8 }}>{success}</div>}
 
         <div className="flex gap-4">
-          {isOwnEvent ? (
-            <button className="btn-secondary w-full justify-center opacity-50 cursor-not-allowed text-xl py-3" disabled style={{ padding: '1rem' }}>
-              You are the Event Organizer
-            </button>
-          ) : isRegistered ? (
+          {isRegistered ? (
             <div className="flex gap-4 w-full">
               {isAwarded ? (
                 <button className="btn-primary flex-1 justify-center" onClick={() => setShowCertificate(true)} style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)', border: 'none', color: 'white' }}>
