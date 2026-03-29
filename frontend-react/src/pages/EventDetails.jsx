@@ -15,6 +15,11 @@ export default function EventDetails() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  const [feedbackMode, setFeedbackMode] = useState(false);
+  const [rating, setRating] = useState(5);
+  const [feedback, setFeedback] = useState('');
+  const [submittingFeedback, setSubmittingFeedback] = useState(false);
+
   useEffect(() => {
     fetchEvent();
   }, [id]);
@@ -71,6 +76,22 @@ export default function EventDetails() {
       setError(err.response?.data?.message || 'Error parsing registration.');
     } finally {
       setRegistering(false);
+    }
+  };
+
+  const handleSubmitFeedback = async () => {
+    if (!user) return;
+    setSubmittingFeedback(true);
+    setError('');
+    try {
+      await api.post(`/events/${id}/feedback`, { userId: user.id, rating, feedback });
+      setSuccess('Feedback submitted successfully!');
+      setFeedbackMode(false);
+      fetchEvent();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Error submitting feedback.');
+    } finally {
+      setSubmittingFeedback(false);
     }
   };
 
@@ -160,22 +181,66 @@ export default function EventDetails() {
           )}
         </div>
 
-        {user?.role === 'organizer' && (
-          <div className="flex gap-4 mt-6 pt-6" style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-            <button
-              className="btn-secondary flex-1 justify-center"
-              onClick={() => navigate(`/events/${id}/edit`)}
-            >
-              Edit Event
-            </button>
-            <button
-              className="btn-primary flex-1 justify-center"
-              style={{ backgroundColor: '#ef4444', border: 'none' }}
-              onClick={handleDeleteEvent}
-            >
-              Delete Event
+        {isRegistered && !feedbackMode && (
+          <div className="mt-8 pt-6" style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+            <button className="btn-secondary w-full justify-center py-2" onClick={() => setFeedbackMode(true)}>
+              Leave Feedback
             </button>
           </div>
+        )}
+
+        {feedbackMode && (
+          <div className="mt-8 pt-6" style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+            <h3 className="text-xl mb-4">Leave Feedback</h3>
+            <div className="mb-4">
+              <label className="block text-sm text-muted mb-2">Rating ({rating}/5)</label>
+              <input type="range" min="1" max="5" value={rating} onChange={(e) => setRating(parseInt(e.target.value))} className="w-full" />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm text-muted mb-2">Comments</label>
+              <textarea className="form-input" rows="3" value={feedback} onChange={(e) => setFeedback(e.target.value)} placeholder="What did you think of the event?"></textarea>
+            </div>
+            <div className="flex gap-4">
+              <button className="btn-primary flex-1 justify-center" disabled={submittingFeedback} onClick={handleSubmitFeedback}>{submittingFeedback ? 'Submitting...' : 'Submit Feedback'}</button>
+              <button className="btn-secondary flex-1 justify-center" onClick={() => setFeedbackMode(false)}>Cancel</button>
+            </div>
+          </div>
+        )}
+
+        {user?.role === 'organizer' && (
+          <>
+            <div className="flex gap-4 mt-8 pt-6" style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+              <button
+                className="btn-secondary flex-1 justify-center"
+                onClick={() => navigate(`/events/${id}/edit`)}
+              >
+                Edit Event
+              </button>
+              <button
+                className="btn-primary flex-1 justify-center"
+                style={{ backgroundColor: '#ef4444', border: 'none' }}
+                onClick={handleDeleteEvent}
+              >
+                Delete Event
+              </button>
+            </div>
+            {event.registeredUsers?.filter(u => u.feedback).length > 0 && (
+              <div className="mt-8 pt-6" style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                <h3 className="text-2xl mb-4">Student Feedback</h3>
+                <div className="grid gap-4">
+                  {event.registeredUsers.filter(u => u.feedback).map(u => (
+                    <div key={u.id} className="p-4 rounded-lg bg-gray-800" style={{ background: 'rgba(255,255,255,0.05)' }}>
+                      <div className="flex justify-between mb-2">
+                        <span className="font-bold">{u.name}</span>
+                        <span className="text-yellow-400">{'★'.repeat(u.rating)}{'☆'.repeat(5 - u.rating)}</span>
+                      </div>
+                      <p className="text-muted text-sm m-0">{u.feedback}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

@@ -18,4 +18,6 @@ public class Registration {
     private String userId;
     private String registeredAt;
     private String status;
+    private Integer rating;
+    private String feedback;
 }

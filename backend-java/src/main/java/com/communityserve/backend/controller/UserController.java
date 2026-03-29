@@ -12,6 +12,11 @@ import java.util.Map;
 public class UserController {
     @Autowired UserRepository userRepository;
 
+    @GetMapping("/leaderboard")
+    public ResponseEntity<?> getLeaderboard() {
+        return ResponseEntity.ok(Map.of("data", userRepository.findTop10ByRoleOrderByHoursCompletedDesc("student")));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<?> getUserProfile(@PathVariable String id) {
         return userRepository.findById(id)

@@ -6,6 +6,9 @@ import { Calendar, MapPin, Users, ArrowRight } from 'lucide-react';
 export default function Home() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('all');
 
   useEffect(() => {
     api.get('/events').then((res) => {
@@ -24,16 +27,40 @@ export default function Home() {
         <p className="text-muted text-xl" style={{ maxWidth: 600, margin: '0 auto' }}>Join thousands of students volunteering for meaningful community service events.</p>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+      <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
         <h2>Upcoming Events</h2>
+        
+        <div className="flex gap-4 w-full md:w-auto">
+          <input 
+            type="text" 
+            placeholder="Search events..." 
+            className="form-input flex-1 md:w-64"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <select 
+            className="form-input w-auto bg-gray-800"
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+          >
+            <option value="all">All Categories</option>
+            <option value="education">Education</option>
+            <option value="environment">Environment</option>
+            <option value="health">Health</option>
+            <option value="general">General</option>
+          </select>
+        </div>
       </div>
 
       {loading ? (
         <div className="text-center text-muted">Loading events...</div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
-          {events.map((evt) => (
-            <div key={evt.id} className="glass-panel event-card">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {events
+            .filter(evt => (categoryFilter === 'all' || evt.category === categoryFilter))
+            .filter(evt => evt.title?.toLowerCase().includes(searchTerm.toLowerCase()) || evt.location?.toLowerCase().includes(searchTerm.toLowerCase()))
+            .map((evt) => (
+            <div key={evt.id} className="glass-panel event-card flex flex-col">
               <div className="flex justify-between items-center mb-4">
                 <span className="badge">{evt.category}</span>
                 <span className="text-sm text-muted">{evt.registeredCount}/{evt.maxVolunteers} filled</span>

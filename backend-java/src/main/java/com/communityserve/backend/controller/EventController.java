@@ -82,6 +82,8 @@ public class EventController {
                 uMap.put("email", u.getEmail());
                 uMap.put("role", u.getRole());
                 uMap.put("registeredAt", r.getRegisteredAt());
+                uMap.put("rating", r.getRating());
+                uMap.put("feedback", r.getFeedback());
                 users.add(uMap);
             });
         }
@@ -146,6 +148,24 @@ public class EventController {
         });
 
         return ResponseEntity.ok(Map.of("message", "Successfully unregistered from event"));
+    }
+
+    @PostMapping("/{id}/feedback")
+    public ResponseEntity<?> submitFeedback(@PathVariable String id, @RequestBody Map<String, Object> body) {
+        String userId = (String) body.get("userId");
+        Integer rating = (Integer) body.get("rating");
+        String feedback = (String) body.get("feedback");
+
+        Optional<Registration> regOpt = registrationRepository.findByEventIdAndUserId(id, userId);
+        if (regOpt.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Registration not found"));
+        }
+        Registration r = regOpt.get();
+        if (rating != null) r.setRating(rating);
+        if (feedback != null) r.setFeedback(feedback);
+        registrationRepository.save(r);
+
+        return ResponseEntity.ok(Map.of("message", "Feedback submitted successfully"));
     }
 
     @PostMapping

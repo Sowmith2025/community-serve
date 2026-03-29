@@ -14,6 +14,9 @@ export default function Dashboard() {
   const [insightsError, setInsightsError] = useState('');
   const [statsLoaded, setStatsLoaded] = useState(false);
 
+  // Leaderboard state
+  const [leaderboard, setLeaderboard] = useState([]);
+
   // Student state
   const [studentEvents, setStudentEvents] = useState([]);
   const [eventsLoaded, setEventsLoaded] = useState(false);
@@ -24,7 +27,17 @@ export default function Dashboard() {
     } else if (user?.role === 'student') {
       fetchStudentEvents();
     }
+    fetchLeaderboard();
   }, [user]);
+
+  const fetchLeaderboard = async () => {
+    try {
+      const res = await api.get('/users/leaderboard');
+      setLeaderboard(res.data?.data || []);
+    } catch (err) {
+      console.error('Failed to fetch leaderboard', err);
+    }
+  };
 
   const fetchStudentEvents = async () => {
     try {
@@ -287,6 +300,36 @@ export default function Dashboard() {
           )}
         </div>
       )}
+
+      {/* ── Leaderboard Panel ── */}
+      <div className="glass-panel p-6 mt-8" style={{ padding: '2rem' }}>
+        <h2 className="mb-6 font-bold text-2xl" style={{ color: '#f59e0b', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <Award size={28} /> Top Volunteers
+        </h2>
+        {leaderboard.length > 0 ? (
+          <div className="grid gap-3">
+            {leaderboard.map((student, idx) => (
+              <div key={student.id} className="p-4 rounded-lg flex justify-between items-center" style={{ background: idx === 0 ? 'linear-gradient(135deg, rgba(245,158,11,0.2), rgba(245,158,11,0.05))' : 'rgba(255,255,255,0.02)', border: idx === 0 ? '1px solid rgba(245,158,11,0.5)' : '1px solid rgba(255,255,255,0.1)' }}>
+                <div className="flex items-center gap-4">
+                  <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold" style={{ background: idx === 0 ? '#f59e0b' : idx === 1 ? '#94a3b8' : idx === 2 ? '#b45309' : 'rgba(255,255,255,0.1)', color: idx < 3 ? 'white' : '#a5b4fc' }}>
+                    {idx + 1}
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-lg m-0">{student.name}</h4>
+                    <span className="text-xs text-muted">{student.department || 'Student'}</span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="font-bold text-xl" style={{ color: '#a5b4fc' }}>{student.hoursCompleted || 0} hrs</div>
+                  {student.hoursCompleted >= 50 && <span className="text-xs px-2 py-1 rounded-full uppercase font-bold text-white bg-yellow-600">Gold</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-muted">Leaderboard is currently empty.</p>
+        )}
+      </div>
 
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
