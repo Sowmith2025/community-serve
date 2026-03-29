@@ -24,7 +24,10 @@ export default function Dashboard() {
   useEffect(() => {
     if (user?.role === 'organizer') {
       fetchStats();
-    } else if (user?.role === 'student') {
+    }
+    
+    // Always fetch events and leaderboard so organizers can also be volunteers!
+    if (user) {
       fetchStudentEvents();
     }
     fetchLeaderboard();
@@ -254,17 +257,21 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* ── Activity Panel ── */}
-      {isOrganizer ? (
-        <div className="glass-panel p-6" style={{ padding: '2rem' }}>
-          <h2 className="mb-4">Organizer Activity</h2>
-          <p className="text-muted">No recent activity found. Create events to see them here!</p>
+      {/* ── Activity Panel (Organizers Only) ── */}
+      {isOrganizer && (
+        <div className="glass-panel p-6 mb-8" style={{ padding: '2rem' }}>
+          <h2 className="mb-4 text-2xl" style={{ color: '#10b981' }}>Organizer Check-In</h2>
+          <p className="text-muted m-0">Go to your created events and click 'View Details' to manage volunteers and award certificates!</p>
         </div>
-      ) : (
-        <div className="glass-panel" style={{ padding: '2rem' }}>
-          <h2 className="mb-6 font-bold text-2xl" style={{ color: '#a5b4fc' }}>My Participation Tracker</h2>
-          
-          {/* Progress Section */}
+      )}
+
+      {/* ── My Participation Tracker (Available to EVERYONE) ── */}
+      <div className="glass-panel" style={{ padding: '2rem' }}>
+        <h2 className="mb-6 font-bold text-2xl" style={{ color: '#a5b4fc', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+          Volunteering Tracker {isOrganizer && <span className="text-sm bg-indigo-900 px-2 py-1 rounded-full font-normal">(You can volunteer too!)</span>}
+        </h2>
+        
+        {/* Progress Section */}
           <div className="mb-8">
             <div className="flex justify-between items-end mb-2">
               <span className="text-sm text-gray-400">Hours Goal: 50h</span>
@@ -278,7 +285,10 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <h3 className="mb-4 text-xl">My Registered Events</h3>
+          <h3 className="mb-4 text-xl flex justify-between items-end">
+            My Registered Events
+            <span className="text-xs text-muted font-normal">Click an event to view your Certificate if awarded</span>
+          </h3>
           {!eventsLoaded ? (
             <div className="flex justify-center my-8"><Loader className="animate-spin text-primary" /></div>
           ) : studentEvents.length > 0 ? (
@@ -286,10 +296,12 @@ export default function Dashboard() {
               {studentEvents.map((ev, idx) => (
                 <li key={idx} className="p-4 rounded-lg flex justify-between items-center transition-all hover:translate-x-1" style={{ background: 'rgba(255,255,255,0.05)', borderLeft: '4px solid #4F46E5' }}>
                   <div>
-                    <h4 className="font-bold text-lg mb-1">{ev.title}</h4>
+                    <a href={`/events/${ev.id}`} className="hover:underline text-white">
+                      <h4 className="font-bold text-lg mb-1">{ev.title}</h4>
+                    </a>
                     <p className="text-sm text-gray-400">{new Date(ev.date).toLocaleDateString()} at {ev.time} • {ev.location}</p>
                   </div>
-                  <span className="px-3 py-1 rounded-full text-xs font-bold uppercase" style={{ background: 'rgba(79, 70, 229, 0.2)', color: '#a5b4fc' }}>Registered</span>
+                  <span className="px-3 py-1 rounded-full text-xs font-bold uppercase" style={{ background: 'rgba(79, 70, 229, 0.2)', color: '#a5b4fc' }}>View</span>
                 </li>
               ))}
             </ul>

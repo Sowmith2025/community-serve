@@ -19,6 +19,7 @@ export default function EventDetails() {
   const [rating, setRating] = useState(5);
   const [feedback, setFeedback] = useState('');
   const [submittingFeedback, setSubmittingFeedback] = useState(false);
+  const [showCertificate, setShowCertificate] = useState(false);
 
   useEffect(() => {
     fetchEvent();
@@ -109,7 +110,10 @@ export default function EventDetails() {
   if (loading) return <div className="text-center text-muted mt-4">Loading...</div>;
   if (!event) return <div className="text-center text-muted mt-4">{error}</div>;
 
-  const isRegistered = event.registeredUsers?.some(u => u.id === user?.id);
+  const myRegistration = event.registeredUsers?.find(u => u.id === user?.id);
+  const isRegistered = !!myRegistration;
+  const isAwarded = myRegistration?.status === 'awarded';
+  const isOwnEvent = user?.id === event.organizer?.id;
 
   return (
     <div style={{ maxWidth: 800, margin: '0 auto' }}>
@@ -166,11 +170,21 @@ export default function EventDetails() {
         {success && <div style={{ color: '#10b981', marginBottom: '1rem', padding: '1rem', background: 'rgba(16, 185, 129, 0.1)', borderRadius: 8 }}>{success}</div>}
 
         <div className="flex gap-4">
-          {isRegistered ? (
+          {isOwnEvent ? (
+            <button className="btn-secondary w-full justify-center opacity-50 cursor-not-allowed text-xl py-3" disabled style={{ padding: '1rem' }}>
+              You are the Event Organizer
+            </button>
+          ) : isRegistered ? (
             <div className="flex gap-4 w-full">
-              <button className="btn-secondary flex-1 justify-center cursor-default" disabled>
-                Registered
-              </button>
+              {isAwarded ? (
+                <button className="btn-primary flex-1 justify-center" onClick={() => setShowCertificate(true)} style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)', border: 'none', color: 'white' }}>
+                  🏆 View Certificate
+                </button>
+              ) : (
+                <button className="btn-secondary flex-1 justify-center cursor-default" disabled>
+                  Registered
+                </button>
+              )}
               <button
                 className="btn-primary flex-1 justify-center"
                 style={{ backgroundColor: '#ef4444', border: 'none' }}
@@ -218,7 +232,7 @@ export default function EventDetails() {
           </div>
         )}
 
-        {user?.role === 'organizer' && (
+        {isOwnEvent && (
           <>
             <div className="flex gap-4 mt-8 pt-6" style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }}>
               <button
@@ -296,6 +310,46 @@ export default function EventDetails() {
           </>
         )}
       </div>
+
+      {showCertificate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 p-4">
+          <div className="bg-white text-gray-900 rounded-lg shadow-2xl overflow-hidden" style={{ width: '100%', maxWidth: '800px', position: 'relative' }}>
+            <button onClick={() => setShowCertificate(false)} className="absolute top-4 right-4 text-gray-500 hover:text-gray-900">
+              ✕
+            </button>
+            
+            <div className="p-12 text-center" style={{ border: '15px solid #f59e0b', margin: '15px', background: 'linear-gradient(to bottom right, #ffffff, #fef3c7)' }}>
+              <h1 className="text-4xl font-serif text-yellow-600 mb-2">CERTIFICATE</h1>
+              <h3 className="text-xl font-serif text-gray-500 tracking-widest mb-8">OF ACHIEVEMENT</h3>
+              
+              <p className="text-gray-600 italic mb-4">This uniquely acknowledges that</p>
+              <h2 className="text-5xl font-bold font-serif text-gray-900 mb-6 border-b-2 border-yellow-500 pb-2 inline-block px-8">{user?.name}</h2>
+              
+              <p className="text-gray-600 text-lg mx-auto max-w-lg mb-8">
+                has successfully dedicated their time and valuable efforts to the community by actively participating in the event:
+                <br /><strong className="text-gray-900 text-xl mt-2 block">{event.title}</strong>
+              </p>
+              
+              <div className="flex justify-between items-end px-12 mt-12">
+                <div className="text-center">
+                  <div className="border-b border-gray-400 w-32 mb-2 font-bold">{event.organizer?.name}</div>
+                  <div className="text-sm text-gray-500">Event Organizer</div>
+                </div>
+                
+                <div className="w-24 h-24 rounded-full bg-yellow-500 text-white flex items-center justify-center text-center font-bold font-serif transform -rotate-12 border-4 border-yellow-200">
+                  <span className="text-sm leading-tight">OFFICIAL<br/>AWARD</span>
+                </div>
+                
+                <div className="text-center">
+                  <div className="border-b border-gray-400 w-32 mb-2 font-bold">{new Date().toLocaleDateString()}</div>
+                  <div className="text-sm text-gray-500">Date Issued</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
