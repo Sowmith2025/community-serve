@@ -309,36 +309,36 @@ export default function EventDetails() {
 
       {showCertificate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80 p-4">
-          <div className="bg-white text-gray-900 rounded-lg shadow-2xl overflow-hidden" style={{ width: '100%', maxWidth: '800px', position: 'relative' }}>
-            <button onClick={() => setShowCertificate(false)} className="absolute top-4 right-4 text-gray-500 hover:text-gray-900">
+          <div className="bg-white rounded-lg shadow-2xl overflow-hidden" style={{ width: '100%', maxWidth: '800px', position: 'relative' }}>
+            <button onClick={() => setShowCertificate(false)} className="absolute top-4 right-4" style={{ color: '#6b7280', border: 'none', background: 'transparent', fontSize: '1.5rem', cursor: 'pointer' }}>
               ✕
             </button>
             
-            <div className="p-12 text-center" style={{ border: '15px solid #f59e0b', margin: '15px', background: 'linear-gradient(to bottom right, #ffffff, #fef3c7)' }}>
-              <h1 className="text-4xl font-serif text-yellow-600 mb-2">CERTIFICATE</h1>
-              <h3 className="text-xl font-serif text-gray-500 tracking-widest mb-8">OF ACHIEVEMENT</h3>
+            <div className="p-12 text-center" style={{ border: '15px solid #f59e0b', margin: '15px', background: 'linear-gradient(to bottom right, #ffffff, #fef3c7)', color: '#111827' }}>
+              <h1 className="text-4xl font-serif mb-2" style={{ color: '#ca8a04' }}>CERTIFICATE</h1>
+              <h3 className="text-xl font-serif tracking-widest mb-8" style={{ color: '#6b7280' }}>OF ACHIEVEMENT</h3>
               
-              <p className="text-gray-600 italic mb-4">This uniquely acknowledges that</p>
-              <h2 className="text-5xl font-bold font-serif text-gray-900 mb-6 border-b-2 border-yellow-500 pb-2 inline-block px-8">{user?.name}</h2>
+              <p className="italic mb-4" style={{ color: '#4b5563' }}>This uniquely acknowledges that</p>
+              <h2 className="text-5xl font-bold font-serif mb-6 border-b-2 border-yellow-500 pb-2 inline-block px-8" style={{ color: '#111827', borderBottom: '2px solid #eab308' }}>{user?.name}</h2>
               
-              <p className="text-gray-600 text-lg mx-auto max-w-lg mb-8">
+              <p className="text-lg mx-auto max-w-lg mb-8" style={{ color: '#4b5563' }}>
                 has successfully dedicated their time and valuable efforts to the community by actively participating in the event:
-                <br /><strong className="text-gray-900 text-xl mt-2 block">{event.title}</strong>
+                <br /><strong className="text-xl mt-2 block" style={{ color: '#111827' }}>{event.title}</strong>
               </p>
               
               <div className="flex justify-between items-end px-12 mt-12">
                 <div className="text-center">
-                  <div className="border-b border-gray-400 w-32 mb-2 font-bold">{event.organizer?.name}</div>
-                  <div className="text-sm text-gray-500">Event Organizer</div>
+                  <div className="border-b w-32 mb-2 font-bold" style={{ borderBottom: '1px solid #9ca3af', color: '#111827' }}>{event.organizer?.name}</div>
+                  <div className="text-sm" style={{ color: '#6b7280' }}>Event Organizer</div>
                 </div>
                 
-                <div className="w-24 h-24 rounded-full bg-yellow-500 text-white flex items-center justify-center text-center font-bold font-serif transform -rotate-12 border-4 border-yellow-200">
+                <div className="w-24 h-24 rounded-full flex items-center justify-center text-center font-bold font-serif transform -rotate-12" style={{ background: '#eab308', color: 'white', border: '4px solid #fef08a' }}>
                   <span className="text-sm leading-tight">OFFICIAL<br/>AWARD</span>
                 </div>
                 
                 <div className="text-center">
-                  <div className="border-b border-gray-400 w-32 mb-2 font-bold">{new Date().toLocaleDateString()}</div>
-                  <div className="text-sm text-gray-500">Date Issued</div>
+                  <div className="border-b w-32 mb-2 font-bold" style={{ borderBottom: '1px solid #9ca3af', color: '#111827' }}>{new Date().toLocaleDateString()}</div>
+                  <div className="text-sm" style={{ color: '#6b7280' }}>Date Issued</div>
                 </div>
               </div>
             </div>
