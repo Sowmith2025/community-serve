@@ -49,18 +49,18 @@ export default function Chatbot() {
 
   return (
     <>
-      {/* Floating Button */}
+      {/* Navbar Button */}
       <button
-        onClick={() => setIsOpen(true)}
-        className={`fixed bottom-6 right-6 p-4 rounded-full bg-primary text-white shadow-lg transition-transform hover:scale-110 flex items-center justify-center z-50 ${isOpen ? 'hidden' : 'block'}`}
-        style={{ background: 'linear-gradient(135deg, #4F46E5, #7C3AED)' }}
+        onClick={() => setIsOpen(!isOpen)}
+        className="nav-link flex items-center gap-2"
+        style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
       >
-        <MessageCircle size={28} />
+        <MessageCircle size={18} /> Chat
       </button>
 
       {/* Chat Window */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 w-80 md:w-96 glass-panel flex flex-col z-50 overflow-hidden shadow-2xl border" style={{ height: '500px', maxHeight: '80vh', borderColor: 'rgba(124, 58, 237, 0.3)' }}>
+        <div className="fixed w-80 md:w-96 glass-panel flex flex-col z-50 overflow-hidden shadow-2xl border" style={{ top: '80px', right: '24px', height: '500px', maxHeight: 'calc(100vh - 100px)', borderColor: 'rgba(124, 58, 237, 0.3)' }}>
           {/* Header */}
           <div className="flex items-center justify-between p-4 bg-primary text-white" style={{ background: 'linear-gradient(135deg, #4F46E5, #7C3AED)' }}>
             <div className="flex items-center gap-2">

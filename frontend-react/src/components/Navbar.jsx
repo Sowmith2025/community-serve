@@ -2,6 +2,7 @@ import { useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AuthContext } from './AuthContext';
 import { Heart, LogOut, User } from 'lucide-react';
+import Chatbot from './Chatbot';
 
 export default function Navbar() {
   const { user, logout } = useContext(AuthContext);
@@ -23,6 +24,7 @@ export default function Navbar() {
         {user?.role === 'organizer' && (
           <Link to="/events/new" className="nav-link">Create Event</Link>
         )}
+        <Chatbot />
         {user ? (
           <>
             {user.role === 'student' && (
