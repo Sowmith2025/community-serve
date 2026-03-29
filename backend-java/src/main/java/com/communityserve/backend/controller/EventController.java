@@ -82,6 +82,7 @@ public class EventController {
                 uMap.put("email", u.getEmail());
                 uMap.put("role", u.getRole());
                 uMap.put("registeredAt", r.getRegisteredAt());
+                uMap.put("status", r.getStatus());
                 uMap.put("rating", r.getRating());
                 uMap.put("feedback", r.getFeedback());
                 users.add(uMap);
@@ -166,6 +167,28 @@ public class EventController {
         registrationRepository.save(r);
 
         return ResponseEntity.ok(Map.of("message", "Feedback submitted successfully"));
+    }
+
+    @PostMapping("/{id}/award/{userId}")
+    public ResponseEntity<?> awardCertificate(@PathVariable String id, @PathVariable String userId) {
+        Optional<Registration> regOpt = registrationRepository.findByEventIdAndUserId(id, userId);
+        if (regOpt.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Registration not found"));
+        }
+        Registration r = regOpt.get();
+        if ("awarded".equals(r.getStatus())) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Certificate already awarded"));
+        }
+        
+        r.setStatus("awarded");
+        registrationRepository.save(r);
+
+        userRepository.findById(userId).ifPresent(user -> {
+            user.setHoursCompleted((user.getHoursCompleted() == null ? 0 : user.getHoursCompleted()) + 5);
+            userRepository.save(user);
+        });
+
+        return ResponseEntity.ok(Map.of("message", "Certificate awarded successfully"));
     }
 
     @PostMapping

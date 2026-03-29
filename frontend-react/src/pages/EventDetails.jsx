@@ -50,6 +50,17 @@ export default function EventDetails() {
     }
   };
 
+  const handleAwardCertificate = async (userId) => {
+    if (!window.confirm("Award certificate and 5 hours to this volunteer?")) return;
+    try {
+      await api.post(`/events/${id}/award/${userId}`);
+      setSuccess('Certificate awarded successfully!');
+      fetchEvent();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Error awarding certificate.');
+    }
+  };
+
   const handleDeleteEvent = async () => {
     if (!window.confirm("Are you sure you want to delete this event?")) return;
     try {
@@ -224,6 +235,48 @@ export default function EventDetails() {
                 Delete Event
               </button>
             </div>
+            
+            {/* Volunteers List */}
+            {event.registeredUsers?.length > 0 && (
+              <div className="mt-8 pt-6" style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                <h3 className="text-2xl mb-4">Manage Volunteers</h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                        <th className="p-2 text-muted font-normal">Name</th>
+                        <th className="p-2 text-muted font-normal">Email</th>
+                        <th className="p-2 text-muted font-normal">Date Registered</th>
+                        <th className="p-2 text-muted font-normal text-right">Certificate</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {event.registeredUsers.map(u => (
+                        <tr key={u.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                          <td className="p-2 font-bold">{u.name}</td>
+                          <td className="p-2 text-sm">{u.email}</td>
+                          <td className="p-2 text-sm text-muted">{new Date(u.registeredAt).toLocaleDateString()}</td>
+                          <td className="p-2 text-right">
+                            {u.status === 'awarded' ? (
+                              <span className="badge" style={{ background: '#10b981', color: 'white' }}>Awarded</span>
+                            ) : (
+                              <button 
+                                className="btn-secondary" 
+                                style={{ padding: '0.25rem 0.75rem', fontSize: '0.8rem' }}
+                                onClick={() => handleAwardCertificate(u.id)}
+                              >
+                                Award
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
             {event.registeredUsers?.filter(u => u.feedback).length > 0 && (
               <div className="mt-8 pt-6" style={{ borderTop: '1px solid rgba(255,255,255,0.1)' }}>
                 <h3 className="text-2xl mb-4">Student Feedback</h3>
