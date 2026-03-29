@@ -25,9 +25,15 @@ export default function Navbar() {
         )}
         {user ? (
           <>
-            <Link to="/dashboard" className="nav-link flex items-center gap-2">
+            {user.role === 'student' && (
+              <Link to="/dashboard" className="nav-link">My Tracker</Link>
+            )}
+            {user.role === 'organizer' && (
+              <Link to="/dashboard" className="nav-link">Dashboard</Link>
+            )}
+            <span className="flex items-center gap-2 text-muted ml-2">
               <User size={18} /> {user.name}
-            </Link>
+            </span>
             <button onClick={handleLogout} className="btn-secondary" style={{ padding: '0.5rem 1rem' }}>
               <LogOut size={16} /> Logout
             </button>

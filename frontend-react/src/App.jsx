@@ -7,6 +7,7 @@ import Register from './pages/Register';
 import EventDetails from './pages/EventDetails';
 import Dashboard from './pages/Dashboard';
 import EventForm from './pages/EventForm';
+import Chatbot from './components/Chatbot';
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
               <Route path="/dashboard" element={<Dashboard />} />
             </Routes>
           </main>
+          <Chatbot />
         </div>
       </AuthProvider>
     </Router>

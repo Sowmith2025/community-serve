@@ -14,11 +14,36 @@ export default function Dashboard() {
   const [insightsError, setInsightsError] = useState('');
   const [statsLoaded, setStatsLoaded] = useState(false);
 
+  // Student state
+  const [studentEvents, setStudentEvents] = useState([]);
+  const [eventsLoaded, setEventsLoaded] = useState(false);
+
   useEffect(() => {
     if (user?.role === 'organizer') {
       fetchStats();
+    } else if (user?.role === 'student') {
+      fetchStudentEvents();
     }
   }, [user]);
+
+  const fetchStudentEvents = async () => {
+    try {
+      // Fetch fresh user data to get updated eventsAttended
+      const userRes = await api.get(`/users/${user.id}`);
+      const freshUser = userRes.data?.data || user;
+      
+      const res = await api.get('/events');
+      if (res.data?.data) {
+        const attendedIds = freshUser.eventsAttended || [];
+        const attended = res.data.data.filter(ev => attendedIds.includes(ev.id));
+        setStudentEvents(attended);
+      }
+      setEventsLoaded(true);
+    } catch (err) {
+      console.error('Failed to fetch student events', err);
+      setEventsLoaded(true);
+    }
+  };
 
   const fetchStats = async () => {
     try {
@@ -55,7 +80,7 @@ export default function Dashboard() {
       <p className="text-muted mb-8">Role: {user.role.toUpperCase()}</p>
 
       {/* ── Stats Row ── */}
-      <div className="grid grid-cols-1 md:grid-cols-3 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 mb-8 gap-6">
         <div className="glass-panel event-card flex items-center gap-4">
           <div className="p-4 rounded-full" style={{ background: 'rgba(79, 70, 229, 0.2)' }}>
             <Clock className="text-primary" size={32} />
@@ -76,7 +101,7 @@ export default function Dashboard() {
             <div className="text-3xl font-bold">
               {isOrganizer ? (stats?.totalRegistrations ?? '—') : (user.eventsAttended?.length || 0)}
             </div>
-            <div className="text-muted">{isOrganizer ? 'Total Registrations' : 'Events Attended'}</div>
+            <div className="text-muted">{isOrganizer ? 'Total Registrations' : 'Events Registered'}</div>
           </div>
         </div>
 
@@ -86,7 +111,7 @@ export default function Dashboard() {
           </div>
           <div>
             <div className="text-3xl font-bold">
-              {isOrganizer ? `${stats?.avgFillRate ?? '—'}%` : 'Newbie'}
+              {isOrganizer ? `${stats?.avgFillRate ?? '—'}%` : (user.hoursCompleted >= 50 ? 'Gold' : user.hoursCompleted >= 20 ? 'Silver' : 'Bronze')}
             </div>
             <div className="text-muted">{isOrganizer ? 'Avg Fill Rate' : 'Current Rank'}</div>
           </div>
@@ -217,10 +242,51 @@ export default function Dashboard() {
       )}
 
       {/* ── Activity Panel ── */}
-      <div className="glass-panel p-6" style={{ padding: '2rem' }}>
-        <h2 className="mb-4">My Activity</h2>
-        <p className="text-muted">No recent activity found. {isOrganizer ? 'Create events to see them here!' : 'Browse events and register to get started!'}</p>
-      </div>
+      {isOrganizer ? (
+        <div className="glass-panel p-6" style={{ padding: '2rem' }}>
+          <h2 className="mb-4">Organizer Activity</h2>
+          <p className="text-muted">No recent activity found. Create events to see them here!</p>
+        </div>
+      ) : (
+        <div className="glass-panel" style={{ padding: '2rem' }}>
+          <h2 className="mb-6 font-bold text-2xl" style={{ color: '#a5b4fc' }}>My Participation Tracker</h2>
+          
+          {/* Progress Section */}
+          <div className="mb-8">
+            <div className="flex justify-between items-end mb-2">
+              <span className="text-sm text-gray-400">Hours Goal: 50h</span>
+              <span className="text-lg font-bold text-primary">{user.hoursCompleted || 0} / 50</span>
+            </div>
+            <div className="w-full bg-gray-700 rounded-full h-4 overflow-hidden" style={{ background: 'rgba(255,255,255,0.1)' }}>
+              <div 
+                className="bg-primary h-4 rounded-full transition-all duration-1000 ease-out" 
+                style={{ width: `${Math.min(100, ((user.hoursCompleted || 0) / 50) * 100)}%`, background: 'linear-gradient(90deg, #4F46E5, #7C3AED)' }}
+              ></div>
+            </div>
+          </div>
+
+          <h3 className="mb-4 text-xl">My Registered Events</h3>
+          {!eventsLoaded ? (
+            <div className="flex justify-center my-8"><Loader className="animate-spin text-primary" /></div>
+          ) : studentEvents.length > 0 ? (
+            <ul className="flex flex-col gap-3">
+              {studentEvents.map((ev, idx) => (
+                <li key={idx} className="p-4 rounded-lg flex justify-between items-center transition-all hover:translate-x-1" style={{ background: 'rgba(255,255,255,0.05)', borderLeft: '4px solid #4F46E5' }}>
+                  <div>
+                    <h4 className="font-bold text-lg mb-1">{ev.title}</h4>
+                    <p className="text-sm text-gray-400">{new Date(ev.date).toLocaleDateString()} at {ev.time} • {ev.location}</p>
+                  </div>
+                  <span className="px-3 py-1 rounded-full text-xs font-bold uppercase" style={{ background: 'rgba(79, 70, 229, 0.2)', color: '#a5b4fc' }}>Registered</span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-muted p-4 rounded-lg text-center" style={{ background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.1)' }}>
+              You haven't registered for any events yet. <a href="/" className="text-primary hover:underline font-bold">Browse events</a> to get started!
+            </p>
+          )}
+        </div>
+      )}
 
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }

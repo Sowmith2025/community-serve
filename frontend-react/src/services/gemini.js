@@ -80,3 +80,41 @@ Respond ONLY with a valid JSON array, e.g.: ["Insight 1.", "Insight 2.", "Insigh
   if (!match) return ['Could not parse insights. Please try again.'];
   return JSON.parse(match[0]);
 }
+
+/**
+ * Handle chatbot conversations
+ * @param {Array} history - the chat history array of objects {role, content}
+ * @param {string} userRole - 'student' or 'organizer'
+ * @returns {Promise<string>}
+ */
+export async function sendChatMessage(history, userRole) {
+  const systemPrompt = `You are a helpful AI assistant for a local community service and volunteering platform. 
+The current user is a ${userRole}. Help them with questions about volunteering, events, and using the platform. 
+Keep your answers brief, friendly, and helpful.`;
+
+  const messages = [
+    { role: "system", content: systemPrompt },
+    ...history.map(msg => ({ role: msg.role, content: msg.content }))
+  ];
+
+  const res = await fetch(API_URL, {
+    method: 'POST',
+    headers: { 
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${NVIDIA_API_KEY}`
+    },
+    body: JSON.stringify({
+      model: "meta/llama-3.1-8b-instruct",
+      messages: messages,
+      temperature: 0.7,
+      max_tokens: 512,
+    }),
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to get AI response");
+  }
+
+  const data = await res.json();
+  return data?.choices?.[0]?.message?.content?.trim() ?? '';
+}

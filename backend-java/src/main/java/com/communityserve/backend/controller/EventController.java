@@ -117,6 +117,13 @@ public class EventController {
         r.setStatus("registered");
         registrationRepository.save(r);
 
+        userRepository.findById(userId).ifPresent(user -> {
+            if (!user.getEventsAttended().contains(id)) {
+                user.getEventsAttended().add(id);
+                userRepository.save(user);
+            }
+        });
+
         return ResponseEntity.ok(Map.of("message", "Successfully registered for event", "registration", r));
     }
 
@@ -132,6 +139,12 @@ public class EventController {
         }
 
         registrationRepository.delete(regOpt.get());
+
+        userRepository.findById(userId).ifPresent(user -> {
+            user.getEventsAttended().remove(id);
+            userRepository.save(user);
+        });
+
         return ResponseEntity.ok(Map.of("message", "Successfully unregistered from event"));
     }
 
