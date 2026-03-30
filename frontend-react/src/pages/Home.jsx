@@ -1,92 +1,180 @@
-import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import api from '../services/api';
-import { Calendar, MapPin, Users, ArrowRight } from 'lucide-react';
+import { ArrowRight, Award, Calendar, HeartHandshake, ShieldCheck, Sparkles, Users } from 'lucide-react';
+import { PageIntro, SectionHeader, Shell, StatCard, Surface } from '../components/ui';
+
+const impactStats = [
+  { icon: HeartHandshake, label: 'Volunteer hours logged', value: '14,200+', helper: 'Fueling measurable local impact', tone: 'green' },
+  { icon: Users, label: 'Students engaged', value: '3,480', helper: 'Across campuses and communities', tone: 'blue' },
+  { icon: Calendar, label: 'Events hosted', value: '620', helper: 'From cleanups to tutoring drives', tone: 'amber' },
+];
+
+const testimonials = [
+  {
+    quote: 'Community Serve made volunteering feel as easy as signing up for a campus event, but far more meaningful.',
+    name: 'Asha Raman',
+    role: 'Student Volunteer',
+  },
+  {
+    quote: 'Our team can finally track registrations, attendance, and follow-up in one clean workflow.',
+    name: 'Daniel Joseph',
+    role: 'Community Organizer',
+  },
+  {
+    quote: 'The badges and streaks pushed me to keep showing up. It turned service into a habit I am proud of.',
+    name: 'Mia Carter',
+    role: 'Campus Ambassador',
+  },
+];
+
+const productHighlights = [
+  {
+    icon: Sparkles,
+    title: 'Guided onboarding',
+    description: 'Role-specific journeys help students discover opportunities and organizers launch events with less friction.',
+  },
+  {
+    icon: Award,
+    title: 'Gamified progress',
+    description: 'Badges, streaks, leaderboards, and celebration moments make impact visible and rewarding.',
+  },
+  {
+    icon: ShieldCheck,
+    title: 'Built for trust',
+    description: 'Accessible interactions, clear status feedback, and structured event data keep the experience dependable.',
+  },
+];
 
 export default function Home() {
-  const [events, setEvents] = useState([]);
-  const [loading, setLoading] = useState(true);
-  
-  const [searchTerm, setSearchTerm] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('all');
-
-  useEffect(() => {
-    api.get('/events').then((res) => {
-      setEvents(res.data.data);
-      setLoading(false);
-    }).catch(err => {
-      console.error(err);
-      setLoading(false);
-    });
-  }, []);
-
   return (
-    <div>
-      <div className="text-center mb-8" style={{ padding: '4rem 0' }}>
-        <h1 className="text-4xl" style={{ marginBottom: '1rem' }}>Make a Difference <span className="text-primary">Today</span></h1>
-        <p className="text-muted text-xl" style={{ maxWidth: 600, margin: '0 auto' }}>Join thousands of students volunteering for meaningful community service events.</p>
-      </div>
-
-      <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
-        <h2>Upcoming Events</h2>
-        
-        <div className="flex gap-4 w-full md:w-auto">
-          <input 
-            type="text" 
-            placeholder="Search events..." 
-            className="form-input flex-1 md:w-64"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+    <Shell>
+      <section className="hero-grid">
+        <div className="hero-copy">
+          <PageIntro
+            eyebrow="Community-first volunteering"
+            title="Help students turn good intentions into consistent community action."
+            description="Community Serve connects students and organizers through a joyful, low-friction volunteering experience with progress tracking, social proof, and guided event management."
+            actions={
+              <>
+                <Link to="/register" className="btn-primary">
+                  Join a Cause
+                </Link>
+                <Link to="/events" className="btn-secondary">
+                  Explore Events
+                </Link>
+              </>
+            }
           />
-          <select 
-            className="form-input w-auto bg-gray-800"
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-          >
-            <option value="all">All Categories</option>
-            <option value="education">Education</option>
-            <option value="environment">Environment</option>
-            <option value="health">Health</option>
-            <option value="general">General</option>
-          </select>
+          <div className="hero-pills" aria-label="Core product outcomes">
+            <span>Personalized recommendations</span>
+            <span>Role-based dashboards</span>
+            <span>Accessible, mobile-first design</span>
+          </div>
         </div>
-      </div>
 
-      {loading ? (
-        <div className="text-center text-muted">Loading events...</div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {events
-            .filter(evt => (categoryFilter === 'all' || evt.category === categoryFilter))
-            .filter(evt => evt.title?.toLowerCase().includes(searchTerm.toLowerCase()) || evt.location?.toLowerCase().includes(searchTerm.toLowerCase()))
-            .map((evt) => (
-            <div key={evt.id} className="glass-panel event-card flex flex-col">
-              <div className="flex justify-between items-center mb-4">
-                <span className="badge">{evt.category}</span>
-                <span className="text-sm text-muted">{evt.registeredCount}/{evt.maxVolunteers} filled</span>
+        <div className="hero-showcase surface surface-glow">
+          <div className="showcase-panel">
+            <div className="showcase-card">
+              <span className="eyebrow">Student momentum</span>
+              <h3>Build your volunteering streak</h3>
+              <p>See recommended events, hours contributed, and badge progress in one motivating dashboard.</p>
+              <div className="showcase-meter">
+                <div className="showcase-meter-fill" style={{ width: '76%' }} />
               </div>
-              <h3 style={{ marginBottom: '0.5rem', fontSize: '1.25rem' }}>{evt.title}</h3>
-              <p className="text-muted text-sm mb-4" style={{ flex: 1 }}>{evt.description.substring(0, 100)}...</p>
-              
-              <div className="text-sm text-muted mb-4">
-                <div className="flex items-center gap-2 mb-2">
-                  <Calendar size={16} /> {evt.date} at {evt.time}
-                </div>
-                <div className="flex items-center gap-2 mb-2">
-                  <MapPin size={16} /> {evt.location}
-                </div>
-                <div className="flex items-center gap-2">
-                  <Users size={16} /> By {evt.organizer}
-                </div>
-              </div>
-
-              <Link to={`/events/${evt.id}`} className="btn-secondary text-center w-full" style={{ marginTop: 'auto' }}>
-                View Details <ArrowRight size={16} style={{ display: 'inline', marginLeft: 8 }}/>
-              </Link>
+              <small>76% toward Spring Impact Goal</small>
             </div>
+            <div className="showcase-card showcase-card-alt">
+              <span className="eyebrow">Organizer clarity</span>
+              <h3>Launch events with confidence</h3>
+              <p>Create new opportunities, monitor participation, and act on engagement insights in real time.</p>
+              <ul className="showcase-list">
+                <li>132 registrations this month</li>
+                <li>92% average attendance rate</li>
+                <li>18 high-intent returning volunteers</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="stats-grid">
+        {impactStats.map((stat) => (
+          <StatCard key={stat.label} {...stat} />
+        ))}
+      </section>
+
+      <section className="feature-section">
+        <SectionHeader
+          eyebrow="Why it works"
+          title="A product experience designed to increase participation, retention, and organizer confidence."
+          description="Every touchpoint is built to reduce friction, make impact tangible, and keep users moving toward the next meaningful action."
+        />
+        <div className="feature-grid">
+          {productHighlights.map((item) => (
+            <Surface key={item.title} className="feature-card">
+              <div className="feature-icon">
+                <item.icon size={20} />
+              </div>
+              <h3>{item.title}</h3>
+              <p>{item.description}</p>
+            </Surface>
           ))}
         </div>
-      )}
-    </div>
+      </section>
+
+      <section className="story-layout">
+        <Surface className="story-card story-card-large">
+          <SectionHeader
+            eyebrow="Student journey"
+            title="From discovery to recognition in a few clear steps."
+            description="Students can browse opportunities, register quickly, track hours, and celebrate progress through a rewarding feedback loop."
+          />
+          <div className="journey-steps">
+            <div>
+              <strong>01</strong>
+              <span>Explore events with smart filters and visual previews.</span>
+            </div>
+            <div>
+              <strong>02</strong>
+              <span>Register in seconds and receive immediate confirmation.</span>
+            </div>
+            <div>
+              <strong>03</strong>
+              <span>Track contributions, badges, and streaks in a motivating dashboard.</span>
+            </div>
+          </div>
+        </Surface>
+
+        <Surface className="story-card">
+          <SectionHeader
+            eyebrow="Organizer journey"
+            title="Guided event creation with analytics that matter."
+            description="Organizers get a simplified creation flow, participant management, and a live pulse on engagement."
+          />
+          <Link to="/events/new" className="inline-link strong-link">
+            Create your next event
+            <ArrowRight size={16} />
+          </Link>
+        </Surface>
+      </section>
+
+      <section className="testimonial-section">
+        <SectionHeader
+          eyebrow="Success stories"
+          title="People should leave feeling impactful, connected, and eager to come back."
+          description="The UI leans into trust, momentum, and positive reinforcement so volunteering feels energizing instead of administrative."
+        />
+        <div className="testimonial-grid">
+          {testimonials.map((item) => (
+            <Surface key={item.name} className="testimonial-card">
+              <p>"{item.quote}"</p>
+              <div>
+                <strong>{item.name}</strong>
+                <span>{item.role}</span>
+              </div>
+            </Surface>
+          ))}
+        </div>
+      </section>
+    </Shell>
   );
 }

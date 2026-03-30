@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useContext } from 'react';
 import { MessageCircle, X, Send, Loader } from 'lucide-react';
-import { AuthContext } from './AuthContext';
+import { AuthContext } from './auth-context';
 import { sendChatMessage } from '../services/gemini';
 
 export default function Chatbot() {

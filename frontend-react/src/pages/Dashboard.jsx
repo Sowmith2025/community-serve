@@ -1,359 +1,365 @@
-import { useState, useEffect, useContext } from 'react';
-import { AuthContext } from '../components/AuthContext';
-import { Award, Clock, Star, Sparkles, Loader, TrendingUp, RefreshCw } from 'lucide-react';
+import { useContext, useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import {
+  Award,
+  Bell,
+  CalendarDays,
+  Clock3,
+  Loader,
+  PlusCircle,
+  Sparkles,
+  TrendingUp,
+  Trophy,
+  Users,
+} from 'lucide-react';
+import { AuthContext } from '../components/auth-context';
 import api from '../services/api';
 import { generateOrganizerInsights } from '../services/gemini';
+import { EmptyState, EventCard, PageIntro, ProgressBar, ProgressRing, SectionHeader, Shell, StatCard, Surface } from '../components/ui';
 
 export default function Dashboard() {
   const { user } = useContext(AuthContext);
-
-  // AI Insights state (organizer only)
   const [stats, setStats] = useState(null);
+  const [leaderboard, setLeaderboard] = useState([]);
+  const [events, setEvents] = useState([]);
+  const [allEvents, setAllEvents] = useState([]);
+  const [loadingEvents, setLoadingEvents] = useState(true);
+  const [loadingStats, setLoadingStats] = useState(false);
   const [insights, setInsights] = useState([]);
   const [insightsLoading, setInsightsLoading] = useState(false);
   const [insightsError, setInsightsError] = useState('');
-  const [statsLoaded, setStatsLoaded] = useState(false);
-
-  // Leaderboard state
-  const [leaderboard, setLeaderboard] = useState([]);
-
-  // Student state
-  const [studentEvents, setStudentEvents] = useState([]);
-  const [eventsLoaded, setEventsLoaded] = useState(false);
 
   useEffect(() => {
-    if (user?.role === 'organizer') {
-      fetchStats();
-    }
-    
-    // Always fetch events and leaderboard so organizers can also be volunteers!
-    if (user) {
-      fetchStudentEvents();
-    }
-    fetchLeaderboard();
+    if (!user) return;
+
+    let mounted = true;
+
+    const loadSharedData = async () => {
+      try {
+        const [leaderboardRes, eventsRes] = await Promise.all([
+          api.get('/users/leaderboard'),
+          api.get('/events'),
+        ]);
+
+        if (!mounted) return;
+        const fetchedEvents = eventsRes.data?.data || [];
+        setLeaderboard(leaderboardRes.data?.data || []);
+        setAllEvents(fetchedEvents);
+
+        if (user.role === 'organizer') {
+          setEvents(fetchedEvents.filter((event) => event.organizer?.id === user.id || event.organizerId === user.id));
+        } else {
+          const attendedIds = user.eventsAttended || [];
+          const registered = fetchedEvents.filter((event) => attendedIds.includes(event.id));
+          setEvents(registered);
+        }
+      } catch (error) {
+        console.error('Dashboard data fetch failed', error);
+      } finally {
+        if (mounted) {
+          setLoadingEvents(false);
+        }
+      }
+    };
+
+    const loadOrganizerStats = async () => {
+      if (user.role !== 'organizer') return;
+      setLoadingStats(true);
+      try {
+        const res = await api.get(`/organizer/stats?organizerId=${user.id}`);
+        if (mounted) {
+          setStats(res.data);
+        }
+      } catch (error) {
+        console.error('Organizer stats fetch failed', error);
+      } finally {
+        if (mounted) {
+          setLoadingStats(false);
+        }
+      }
+    };
+
+    loadSharedData();
+    loadOrganizerStats();
+
+    return () => {
+      mounted = false;
+    };
   }, [user]);
 
-  const fetchLeaderboard = async () => {
-    try {
-      const res = await api.get('/users/leaderboard');
-      setLeaderboard(res.data?.data || []);
-    } catch (err) {
-      console.error('Failed to fetch leaderboard', err);
+  const isOrganizer = user?.role === 'organizer';
+  const hoursCompleted = user?.hoursCompleted || 0;
+  const goalProgress = Math.min(100, Math.round((hoursCompleted / 50) * 100));
+  const streakProgress = Math.min(100, Math.round((events.length / 8) * 100));
+  const recommendedEvents = useMemo(() => {
+    if (isOrganizer) {
+      return [];
     }
-  };
-
-  const fetchStudentEvents = async () => {
-    try {
-      // Fetch fresh user data to get updated eventsAttended
-      const userRes = await api.get(`/users/${user.id}`);
-      const freshUser = userRes.data?.data || user;
-      
-      const res = await api.get('/events');
-      if (res.data?.data) {
-        const attendedIds = freshUser.eventsAttended || [];
-        const attended = res.data.data.filter(ev => attendedIds.includes(ev.id));
-        setStudentEvents(attended);
-      }
-      setEventsLoaded(true);
-    } catch (err) {
-      console.error('Failed to fetch student events', err);
-      setEventsLoaded(true);
-    }
-  };
-
-  const fetchStats = async () => {
-    try {
-      const res = await api.get(`/organizer/stats?organizerId=${user.id}`);
-      setStats(res.data);
-      setStatsLoaded(true);
-    } catch (err) {
-      console.error('Failed to fetch organizer stats', err);
-    }
-  };
+    const attended = new Set(user?.eventsAttended || []);
+    return allEvents.filter((event) => !attended.has(event.id)).slice(0, 3);
+  }, [allEvents, isOrganizer, user?.eventsAttended]);
 
   const handleGenerateInsights = async () => {
     if (!stats) return;
     setInsightsLoading(true);
     setInsightsError('');
-    setInsights([]);
     try {
-      const result = await generateOrganizerInsights(stats);
-      setInsights(result);
-    } catch (err) {
-      setInsightsError(err.message || 'Failed to generate insights.');
+      const generatedInsights = await generateOrganizerInsights(stats);
+      setInsights(generatedInsights);
+    } catch (error) {
+      setInsightsError(error.message || 'Could not generate organizer insights.');
     } finally {
       setInsightsLoading(false);
     }
   };
 
-  if (!user) return <div className="text-center mt-4">Please log in to view dashboard.</div>;
+  if (!user) {
+    return (
+      <Shell>
+        <EmptyState
+          title="Your dashboard unlocks after sign in"
+          description="Log in to see your volunteering progress, recommendations, and event insights."
+          action={<Link to="/login" className="btn-primary">Sign in</Link>}
+        />
+      </Shell>
+    );
+  }
 
-  const isOrganizer = user.role === 'organizer';
+  const studentStats = [
+    { icon: Clock3, label: 'Hours contributed', value: hoursCompleted, helper: 'Visible progress keeps motivation high', tone: 'blue' },
+    { icon: Award, label: 'Badges earned', value: hoursCompleted >= 50 ? 6 : hoursCompleted >= 20 ? 4 : 2, helper: 'Milestones celebrate consistency', tone: 'amber' },
+    { icon: Trophy, label: 'Events joined', value: events.length, helper: 'Repeat participation builds streaks', tone: 'green' },
+  ];
+
+  const organizerStats = [
+    { icon: CalendarDays, label: 'Events created', value: stats?.totalEvents ?? '0', helper: 'Track your program cadence', tone: 'blue' },
+    { icon: Users, label: 'Registrations', value: stats?.totalRegistrations ?? '0', helper: 'Monitor demand and reach', tone: 'green' },
+    { icon: TrendingUp, label: 'Average fill rate', value: `${stats?.avgFillRate ?? 0}%`, helper: 'Spot momentum at a glance', tone: 'amber' },
+  ];
 
   return (
-    <div>
-      <h1 className="text-4xl mb-2">Welcome back, {user.name}!</h1>
-      <p className="text-muted mb-8">Role: {user.role.toUpperCase()}</p>
-
-      {/* ── Stats Row ── */}
-      <div className="grid grid-cols-1 md:grid-cols-3 mb-8 gap-6">
-        <div className="glass-panel event-card flex items-center gap-4">
-          <div className="p-4 rounded-full" style={{ background: 'rgba(79, 70, 229, 0.2)' }}>
-            <Clock className="text-primary" size={32} />
-          </div>
-          <div>
-            <div className="text-3xl font-bold">
-              {isOrganizer ? (stats?.totalEvents ?? '—') : (user.hoursCompleted || 0)}
-            </div>
-            <div className="text-muted">{isOrganizer ? 'Events Created' : 'Hours Completed'}</div>
-          </div>
-        </div>
-
-        <div className="glass-panel event-card flex items-center gap-4">
-          <div className="p-4 rounded-full" style={{ background: 'rgba(16, 185, 129, 0.2)' }}>
-            <Star className="text-secondary" size={32} />
-          </div>
-          <div>
-            <div className="text-3xl font-bold">
-              {isOrganizer ? (stats?.totalRegistrations ?? '—') : (user.eventsAttended?.length || 0)}
-            </div>
-            <div className="text-muted">{isOrganizer ? 'Total Registrations' : 'Events Registered'}</div>
-          </div>
-        </div>
-
-        <div className="glass-panel event-card flex items-center gap-4">
-          <div className="p-4 rounded-full" style={{ background: 'rgba(245, 158, 11, 0.2)' }}>
-            <Award style={{ color: '#f59e0b' }} size={32} />
-          </div>
-          <div>
-            <div className="text-3xl font-bold">
-              {isOrganizer ? `${stats?.avgFillRate ?? '—'}%` : (user.hoursCompleted >= 50 ? 'Gold' : user.hoursCompleted >= 20 ? 'Silver' : 'Bronze')}
-            </div>
-            <div className="text-muted">{isOrganizer ? 'Avg Fill Rate' : 'Current Rank'}</div>
-          </div>
-        </div>
-      </div>
-
-      {/* ── AI Insights Panel (Organizer Only) ── */}
-      {isOrganizer && (
-        <div
-          className="glass-panel mb-8"
-          style={{
-            padding: '1.75rem 2rem',
-            background: 'linear-gradient(135deg, rgba(79,70,229,0.1), rgba(124,58,237,0.08))',
-            border: '1px solid rgba(124,58,237,0.35)',
-            position: 'relative',
-            overflow: 'hidden',
-          }}
-        >
-          {/* Background glow */}
-          <div style={{
-            position: 'absolute', top: -40, right: -40,
-            width: 200, height: 200,
-            background: 'radial-gradient(circle, rgba(124,58,237,0.15), transparent 70%)',
-            pointerEvents: 'none',
-          }} />
-
-          <div className="flex items-center justify-between mb-4" style={{ flexWrap: 'wrap', gap: '0.75rem' }}>
-            <div className="flex items-center gap-2">
-              <TrendingUp size={20} style={{ color: '#a5b4fc' }} />
-              <h2 style={{ fontSize: '1.2rem', fontWeight: 700, color: 'white', margin: 0 }}>
-                AI Dashboard Insights
-              </h2>
-              <span style={{
-                background: 'linear-gradient(135deg,#4F46E5,#7C3AED)',
-                color: 'white', fontSize: '0.65rem', fontWeight: 700,
-                padding: '0.15rem 0.5rem', borderRadius: 999,
-                textTransform: 'uppercase', letterSpacing: '0.08em',
-              }}>Powered by Gemini</span>
-            </div>
-
-            <button
-              id="ai-insights-btn"
-              onClick={handleGenerateInsights}
-              disabled={insightsLoading || !statsLoaded}
-              style={{
-                display: 'inline-flex', alignItems: 'center', gap: '0.45rem',
-                padding: '0.55rem 1.1rem', borderRadius: 8, border: 'none',
-                background: 'linear-gradient(135deg,#4F46E5,#7C3AED)',
-                color: 'white', fontWeight: 600, fontSize: '0.88rem',
-                cursor: (insightsLoading || !statsLoaded) ? 'not-allowed' : 'pointer',
-                opacity: (insightsLoading || !statsLoaded) ? 0.65 : 1,
-                transition: 'all 0.3s ease',
-                boxShadow: '0 0 14px rgba(124,58,237,0.4)',
-              }}
-            >
-              {insightsLoading
-                ? <><Loader size={14} style={{ animation: 'spin 1s linear infinite' }} /> Analysing…</>
-                : insights.length > 0
-                  ? <><RefreshCw size={14} /> Refresh Insights</>
-                  : <><Sparkles size={14} /> Generate Insights</>}
-            </button>
-          </div>
-
-          {/* Insights body */}
-          {insightsError && (
-            <div style={{ color: '#ef4444', fontSize: '0.875rem' }}>{insightsError}</div>
-          )}
-
-          {!insightsError && insights.length === 0 && !insightsLoading && (
-            <p className="text-muted" style={{ fontSize: '0.9rem' }}>
-              Click <strong style={{ color: '#a5b4fc' }}>Generate Insights</strong> and Gemini AI will analyse your event statistics and surface actionable recommendations.
-            </p>
-          )}
-
-          {insightsLoading && (
-            <div style={{ display: 'flex', gap: 8, flexDirection: 'column' }}>
-              {[1, 2, 3].map(i => (
-                <div key={i} style={{
-                  height: 16, borderRadius: 8,
-                  background: 'rgba(165,180,252,0.12)',
-                  width: `${60 + i * 12}%`,
-                  animation: 'pulse 1.5s ease-in-out infinite',
-                }} />
-              ))}
-            </div>
-          )}
-
-          {insights.length > 0 && !insightsLoading && (
-            <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              {insights.map((insight, idx) => (
-                <li key={idx} style={{
-                  display: 'flex', alignItems: 'flex-start', gap: '0.75rem',
-                  padding: '0.85rem 1rem',
-                  borderRadius: 10,
-                  background: 'rgba(255,255,255,0.04)',
-                  border: '1px solid rgba(165,180,252,0.15)',
-                  fontSize: '0.92rem',
-                  lineHeight: 1.5,
-                  animation: `fadeSlide 0.4s ease ${idx * 0.1}s both`,
-                }}>
-                  <span style={{
-                    minWidth: 24, height: 24, borderRadius: '50%',
-                    background: 'linear-gradient(135deg,#4F46E5,#7C3AED)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '0.7rem', fontWeight: 700, color: 'white', flexShrink: 0,
-                  }}>{idx + 1}</span>
-                  <span style={{ color: '#e2e8f0' }}>{insight}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-
-          {statsLoaded && stats && (
-            <div style={{
-              marginTop: '1rem', paddingTop: '1rem',
-              borderTop: '1px solid rgba(255,255,255,0.07)',
-              display: 'flex', gap: '1.5rem', flexWrap: 'wrap',
-            }}>
-              {Object.entries(stats.categories || {}).map(([cat, count]) => (
-                <div key={cat} style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                  <span style={{ color: '#a5b4fc', fontWeight: 600, textTransform: 'capitalize' }}>{cat}</span>
-                  {' '}&mdash; {count} event{count !== 1 ? 's' : ''}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ── Activity Panel (Organizers Only) ── */}
-      {isOrganizer && (
-        <div className="glass-panel p-6 mb-8" style={{ padding: '2rem' }}>
-          <h2 className="mb-4 text-2xl" style={{ color: '#10b981' }}>Organizer Check-In</h2>
-          <p className="text-muted m-0">Go to your created events and click 'View Details' to manage volunteers and award certificates!</p>
-        </div>
-      )}
-
-      {/* ── My Participation Tracker (Available to EVERYONE) ── */}
-      <div className="glass-panel" style={{ padding: '2rem' }}>
-        <h2 className="mb-6 font-bold text-2xl" style={{ color: '#a5b4fc', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-          Volunteering Tracker {isOrganizer && <span className="text-sm bg-indigo-900 px-2 py-1 rounded-full font-normal">(You can volunteer too!)</span>}
-        </h2>
-        
-        {/* Progress Section */}
-          <div className="mb-8">
-            <div className="flex justify-between items-end mb-2">
-              <span className="text-sm text-gray-400">Hours Goal: 50h</span>
-              <span className="text-lg font-bold text-primary">{user.hoursCompleted || 0} / 50</span>
-            </div>
-            <div className="w-full bg-gray-700 rounded-full h-4 overflow-hidden" style={{ background: 'rgba(255,255,255,0.1)' }}>
-              <div 
-                className="bg-primary h-4 rounded-full transition-all duration-1000 ease-out" 
-                style={{ width: `${Math.min(100, ((user.hoursCompleted || 0) / 50) * 100)}%`, background: 'linear-gradient(90deg, #4F46E5, #7C3AED)' }}
-              ></div>
-            </div>
-          </div>
-
-          <h3 className="mb-4 text-xl flex justify-between items-end">
-            My Registered Events
-            <span className="text-xs text-muted font-normal">Click an event to view your Certificate if awarded</span>
-          </h3>
-          {!eventsLoaded ? (
-            <div className="flex justify-center my-8"><Loader className="animate-spin text-primary" /></div>
-          ) : studentEvents.length > 0 ? (
-            <ul className="flex flex-col gap-3">
-              {studentEvents.map((ev, idx) => (
-                <li key={idx} className="p-4 rounded-lg flex justify-between items-center transition-all hover:translate-x-1" style={{ background: 'rgba(255,255,255,0.05)', borderLeft: '4px solid #4F46E5' }}>
-                  <div>
-                    <a href={`/events/${ev.id}`} className="hover:underline text-white">
-                      <h4 className="font-bold text-lg mb-1">{ev.title}</h4>
-                    </a>
-                    <p className="text-sm text-gray-400">{new Date(ev.date).toLocaleDateString()} at {ev.time} • {ev.location}</p>
-                  </div>
-                  <span className="px-3 py-1 rounded-full text-xs font-bold uppercase" style={{ background: 'rgba(79, 70, 229, 0.2)', color: '#a5b4fc' }}>View</span>
-                </li>
-              ))}
-            </ul>
+    <Shell>
+      <PageIntro
+        eyebrow={isOrganizer ? 'Organizer dashboard' : 'Student dashboard'}
+        title={`Welcome back, ${user.name}.`}
+        description={
+          isOrganizer
+            ? 'Create opportunities, monitor signups, and keep your volunteer community energized with a guided control center.'
+            : 'See upcoming commitments, your service streak, and the next best events to keep your impact growing.'
+        }
+        actions={
+          isOrganizer ? (
+            <Link to="/events/new" className="btn-primary">
+              <PlusCircle size={18} />
+              Create event
+            </Link>
           ) : (
-            <p className="text-muted p-4 rounded-lg text-center" style={{ background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.1)' }}>
-              You haven't registered for any events yet. <a href="/" className="text-primary hover:underline font-bold">Browse events</a> to get started!
-            </p>
+            <Link to="/events" className="btn-primary">
+              Explore events
+            </Link>
+          )
+        }
+      />
+
+      <section className="stats-grid">
+        {(isOrganizer ? organizerStats : studentStats).map((stat) => (
+          <StatCard key={stat.label} {...stat} />
+        ))}
+      </section>
+
+      <section className="dashboard-main">
+        <div className="dashboard-primary">
+          {!isOrganizer ? (
+            <>
+              <Surface className="welcome-banner surface-glow">
+                <div>
+                  <span className="eyebrow">Personalized momentum</span>
+                  <h2>You are {50 - Math.min(50, hoursCompleted)} hours away from the 50-hour impact milestone.</h2>
+                  <p>Keep your streak alive with recommended events and visible progress toward your next badge tier.</p>
+                </div>
+                <div className="welcome-actions">
+                  <Link to="/profile" className="btn-secondary">View profile</Link>
+                  <Link to="/events" className="btn-primary">Join another cause</Link>
+                </div>
+              </Surface>
+
+              <div className="progress-layout">
+                <ProgressRing value={goalProgress} label="Goal progress" detail="Annual volunteering target: 50 hours" />
+                <Surface className="progress-panel">
+                  <SectionHeader
+                    eyebrow="Activity tracker"
+                    title="Keep your impact visible"
+                    description="Progress cues, streaks, and badges make volunteering feel rewarding and repeatable."
+                  />
+                  <div className="progress-stack">
+                    <ProgressBar label="Volunteer hours" value={goalProgress} helper={`${hoursCompleted} of 50 hours completed`} />
+                    <ProgressBar label="Participation streak" value={streakProgress} helper={`${events.length} events completed this cycle`} />
+                    <ProgressBar label="Leadership readiness" value={Math.min(100, hoursCompleted * 2)} helper="Earn more hours to unlock mentor badges" />
+                  </div>
+                </Surface>
+              </div>
+
+              <Surface>
+                <SectionHeader
+                  eyebrow="Recommended next"
+                  title="Upcoming opportunities chosen to keep you engaged"
+                  description="Recommendations can later be tuned by preferences, skills, and past event history."
+                />
+                {recommendedEvents.length ? (
+                  <div className="event-grid compact-grid">
+                    {recommendedEvents.map((event) => (
+                      <EventCard key={event.id} event={event} to={`/events/${event.id}`} cta="See event" />
+                    ))}
+                  </div>
+                ) : (
+                  <EmptyState
+                    title="No recommendations yet"
+                    description="Once you join more events, this space can surface more tailored volunteering opportunities."
+                    action={<Link to="/events" className="btn-secondary">Browse all events</Link>}
+                  />
+                )}
+              </Surface>
+            </>
+          ) : (
+            <>
+              <Surface className="analytics-hero surface-glow">
+                <SectionHeader
+                  eyebrow="Organizer workflow"
+                  title="A guided creation and monitoring experience for every community event."
+                  description="This dashboard is structured around the core organizer loop: create, fill, confirm attendance, and learn from outcomes."
+                  action={<Link to="/events/new" className="btn-primary">New event</Link>}
+                />
+                <div className="analytics-cards">
+                  <div className="analytics-mini-card">
+                    <strong>{stats?.categories?.education ?? 0}</strong>
+                    <span>Education events</span>
+                  </div>
+                  <div className="analytics-mini-card">
+                    <strong>{stats?.categories?.environment ?? 0}</strong>
+                    <span>Environment events</span>
+                  </div>
+                  <div className="analytics-mini-card">
+                    <strong>{stats?.categories?.health ?? 0}</strong>
+                    <span>Health events</span>
+                  </div>
+                </div>
+              </Surface>
+
+              <div className="organizer-workbench">
+                <Surface>
+                  <SectionHeader
+                    eyebrow="Event creation flow"
+                    title="A clean, guided setup that lowers organizer workload"
+                    description="The event form now supports better field hierarchy, AI-assisted copy, and room for future steps like venue confirmation and team assignment."
+                  />
+                  <div className="flow-steps">
+                    <div><strong>1</strong><span>Define the cause, date, and format.</span></div>
+                    <div><strong>2</strong><span>Add a clear description and volunteer capacity.</span></div>
+                    <div><strong>3</strong><span>Publish and track registrations from one place.</span></div>
+                  </div>
+                </Surface>
+
+                <Surface>
+                  <SectionHeader
+                    eyebrow="Notifications"
+                    title="What needs attention"
+                    description="This panel is styled for future live alerts such as waitlist pressure, attendance drops, and volunteer messages."
+                  />
+                  <div className="notification-stack">
+                    <div className="notification-item"><Bell size={16} /><span>2 events are nearing full capacity.</span></div>
+                    <div className="notification-item"><Bell size={16} /><span>One recurring volunteer has not checked in this week.</span></div>
+                    <div className="notification-item"><Bell size={16} /><span>Post-event feedback is available for your latest drive.</span></div>
+                  </div>
+                </Surface>
+              </div>
+
+              <Surface>
+                <SectionHeader
+                  eyebrow="AI guidance"
+                  title="Turn event data into practical next steps"
+                  description="Insights are designed to highlight demand patterns, retention opportunities, and event mix recommendations."
+                  action={
+                    <button className="btn-primary" onClick={handleGenerateInsights} disabled={insightsLoading || !stats}>
+                      {insightsLoading ? <Loader size={18} className="spin" /> : <Sparkles size={18} />}
+                      {insightsLoading ? 'Generating...' : 'Generate insights'}
+                    </button>
+                  }
+                />
+                {insightsError ? <p className="error-text">{insightsError}</p> : null}
+                {loadingStats ? (
+                  <div className="loading-panel">Loading analytics...</div>
+                ) : insights.length ? (
+                  <div className="insight-grid">
+                    {insights.map((item, index) => (
+                      <div key={item} className="insight-card">
+                        <strong>0{index + 1}</strong>
+                        <p>{item}</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="muted-copy">Generate insights to populate this analytics guidance panel.</p>
+                )}
+              </Surface>
+            </>
           )}
         </div>
-      )}
 
-      {/* ── Leaderboard Panel ── */}
-      <div className="glass-panel p-6 mt-8" style={{ padding: '2rem' }}>
-        <h2 className="mb-6 font-bold text-2xl" style={{ color: '#f59e0b', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <Award size={28} /> Top Volunteers
-        </h2>
-        {leaderboard.length > 0 ? (
-          <div className="grid gap-3">
-            {leaderboard.map((student, idx) => (
-              <div key={student.id} className="p-4 rounded-lg flex justify-between items-center" style={{ background: idx === 0 ? 'linear-gradient(135deg, rgba(245,158,11,0.2), rgba(245,158,11,0.05))' : 'rgba(255,255,255,0.02)', border: idx === 0 ? '1px solid rgba(245,158,11,0.5)' : '1px solid rgba(255,255,255,0.1)' }}>
-                <div className="flex items-center gap-4">
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center font-bold" style={{ background: idx === 0 ? '#f59e0b' : idx === 1 ? '#94a3b8' : idx === 2 ? '#b45309' : 'rgba(255,255,255,0.1)', color: idx < 3 ? 'white' : '#a5b4fc' }}>
-                    {idx + 1}
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-lg m-0">{student.name}</h4>
-                    <span className="text-xs text-muted">{student.department || 'Student'}</span>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="font-bold text-xl" style={{ color: '#a5b4fc' }}>{student.hoursCompleted || 0} hrs</div>
-                  {student.hoursCompleted >= 50 && <span className="text-xs px-2 py-1 rounded-full uppercase font-bold text-white bg-yellow-600">Gold</span>}
-                </div>
+        <aside className="dashboard-sidebar">
+          <Surface>
+            <SectionHeader
+              eyebrow={isOrganizer ? 'Participants' : 'My schedule'}
+              title={isOrganizer ? 'Manage active events' : 'Upcoming and completed events'}
+              description={isOrganizer ? 'Use this list as the control point for participants, attendance, and event edits.' : 'Quick access to your registered activities and certificates.'}
+            />
+            {loadingEvents ? (
+              <div className="loading-panel">Loading dashboard events...</div>
+            ) : events.length ? (
+              <div className="stack-list">
+                {events.slice(0, 4).map((event) => (
+                  <Link key={event.id} to={`/events/${event.id}`} className="stack-item">
+                    <div>
+                      <strong>{event.title}</strong>
+                      <span>{event.date} • {event.location}</span>
+                    </div>
+                    <span>{isOrganizer ? `${event.registeredCount || 0} joined` : 'View'}</span>
+                  </Link>
+                ))}
               </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-muted">Leaderboard is currently empty.</p>
-        )}
-      </div>
+            ) : (
+              <EmptyState
+                title={isOrganizer ? 'No events created yet' : 'No events joined yet'}
+                description={isOrganizer ? 'Create your first event to begin building participation momentum.' : 'Your registered volunteering activities will appear here.'}
+                action={<Link to={isOrganizer ? '/events/new' : '/events'} className="btn-secondary">{isOrganizer ? 'Create event' : 'Explore events'}</Link>}
+              />
+            )}
+          </Surface>
 
-      <style>{`
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes pulse { 0%,100%{opacity:0.4} 50%{opacity:0.8} }
-        @keyframes fadeSlide { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
-        .md\\:grid-cols-3 { grid-template-columns: repeat(3,1fr); }
-        .font-bold { font-weight: 700; }
-        .rounded-full { border-radius: 9999px; }
-        .p-4 { padding: 1rem; }
-        .p-6 { padding: 1.5rem; }
-        .mb-2 { margin-bottom: 0.5rem; }
-      `}</style>
-    </div>
+          <Surface>
+            <SectionHeader
+              eyebrow="Leaderboard"
+              title="Top volunteers"
+              description="Healthy social proof can encourage repeat engagement without turning service into a competition."
+            />
+            <div className="leaderboard-list">
+              {leaderboard.length ? (
+                leaderboard.slice(0, 5).map((student, index) => (
+                  <div key={student.id || student.name} className="leaderboard-item">
+                    <div className="leaderboard-rank">{index + 1}</div>
+                    <div>
+                      <strong>{student.name}</strong>
+                      <span>{student.department || 'Student volunteer'}</span>
+                    </div>
+                    <div className="leaderboard-hours">{student.hoursCompleted || 0}h</div>
+                  </div>
+                ))
+              ) : (
+                <p className="muted-copy">Leaderboard data will appear here once hours are recorded.</p>
+              )}
+            </div>
+          </Surface>
+        </aside>
+      </section>
+    </Shell>
   );
 }

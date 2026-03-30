@@ -1,222 +1,240 @@
-import { useState, useEffect, useContext } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Sparkles, Loader } from 'lucide-react';
+import { CalendarDays, Loader, MapPin, Sparkles, Tag, Users } from 'lucide-react';
 import api from '../services/api';
 import { generateEventDescription } from '../services/gemini';
-import { AuthContext } from '../components/AuthContext';
+import { AuthContext } from '../components/auth-context';
+import { Input, PageIntro, Select, Shell, Surface, Textarea } from '../components/ui';
 
 export default function EventForm() {
-    const { id } = useParams();
-    const { user } = useContext(AuthContext);
-    const navigate = useNavigate();
-    const isEditing = Boolean(id);
+  const { id } = useParams();
+  const { user } = useContext(AuthContext);
+  const navigate = useNavigate();
+  const isEditing = Boolean(id);
 
-    const [formData, setFormData] = useState({
-        title: '',
-        description: '',
-        date: '',
-        time: '',
-        location: '',
-        maxVolunteers: 20,
-        category: 'general'
-    });
-    const [loading, setLoading] = useState(isEditing);
-    const [error, setError] = useState('');
-    const [saving, setSaving] = useState(false);
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    date: '',
+    time: '',
+    location: '',
+    maxVolunteers: 20,
+    category: 'general',
+  });
+  const [loading, setLoading] = useState(isEditing);
+  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [aiNotes, setAiNotes] = useState('');
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiMessage, setAiMessage] = useState('');
 
-    // AI-specific state
-    const [aiNotes, setAiNotes] = useState('');
-    const [aiLoading, setAiLoading] = useState(false);
-    const [aiError, setAiError] = useState('');
-    const [aiSuccess, setAiSuccess] = useState(false);
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
 
-    useEffect(() => {
-        if (!user) {
-            navigate('/login');
-            return;
-        }
-        if (isEditing) {
-            api.get(`/events/${id}`).then(res => {
-                const evt = res.data.data;
-                setFormData({
-                    title: evt.title || '',
-                    description: evt.description || '',
-                    date: evt.date || '',
-                    time: evt.time || '',
-                    location: evt.location || '',
-                    maxVolunteers: evt.maxVolunteers || 20,
-                    category: evt.category || 'general'
-                });
-                setLoading(false);
-            }).catch(err => {
-                console.error(err);
-                setError('Failed to load event details.');
-                setLoading(false);
-            });
-        }
-    }, [id, user, isEditing, navigate]);
+    if (isEditing) {
+      api
+        .get(`/events/${id}`)
+        .then((res) => {
+          const event = res.data.data;
+          setFormData({
+            title: event.title || '',
+            description: event.description || '',
+            date: event.date || '',
+            time: event.time || '',
+            location: event.location || '',
+            maxVolunteers: event.maxVolunteers || 20,
+            category: event.category || 'general',
+          });
+        })
+        .catch(() => {
+          setError('Failed to load event details.');
+        })
+        .finally(() => setLoading(false));
+    }
+  }, [id, isEditing, navigate, user]);
 
-    const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-    };
+  const handleChange = (event) => {
+    setFormData((current) => ({ ...current, [event.target.name]: event.target.value }));
+  };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setSaving(true);
-        setError('');
-        try {
-            if (isEditing) {
-                await api.put(`/events/${id}`, formData);
-                navigate(`/events/${id}`);
-            } else {
-                const payload = { ...formData, organizerId: user.id };
-                const res = await api.post('/events', payload);
-                navigate(`/events/${res.data.event.id}`);
-            }
-        } catch (err) {
-            console.error(err);
-            setError('Failed to save event.');
-        } finally {
-            setSaving(false);
-        }
-    };
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setSaving(true);
+    setError('');
+    try {
+      if (isEditing) {
+        await api.put(`/events/${id}`, formData);
+        navigate(`/events/${id}`);
+      } else {
+        const payload = { ...formData, organizerId: user.id };
+        const res = await api.post('/events', payload);
+        navigate(`/events/${res.data.event.id}`);
+      }
+    } catch {
+      setError('Failed to save event.');
+    } finally {
+      setSaving(false);
+    }
+  };
 
-    const handleGenerateDescription = async () => {
-        setAiLoading(true);
-        setAiError('');
-        setAiSuccess(false);
-        try {
-            const generated = await generateEventDescription({
-                title: formData.title,
-                location: formData.location,
-                date: formData.date,
-                category: formData.category,
-                maxVolunteers: formData.maxVolunteers,
-                notes: aiNotes,
-            });
-            setFormData(prev => ({ ...prev, description: generated }));
-            setAiSuccess(true);
-            setTimeout(() => setAiSuccess(false), 3000);
-        } catch (err) {
-            setAiError(err.message || 'AI generation failed. Check your API key.');
-        } finally {
-            setAiLoading(false);
-        }
-    };
+  const handleGenerateDescription = async () => {
+    setAiLoading(true);
+    setAiMessage('');
+    try {
+      const generated = await generateEventDescription({
+        title: formData.title,
+        location: formData.location,
+        date: formData.date,
+        category: formData.category,
+        maxVolunteers: formData.maxVolunteers,
+        notes: aiNotes,
+      });
+      setFormData((current) => ({ ...current, description: generated }));
+      setAiMessage('Description generated and added to the form.');
+    } catch (err) {
+      setAiMessage(err.message || 'AI generation failed.');
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
-    if (loading) return <div className="text-center text-muted mt-4">Loading...</div>;
-
+  if (loading) {
     return (
-        <div className="flex justify-center" style={{ minHeight: '70vh' }}>
-            <div className="glass-panel w-full" style={{ maxWidth: 620, padding: '3rem 2rem' }}>
-                <h2 className="text-4xl mb-6 text-center">{isEditing ? 'Edit Event' : 'Create New Event'}</h2>
+      <Shell>
+        <div className="loading-panel surface">Loading event builder...</div>
+      </Shell>
+    );
+  }
 
-                {error && <div style={{ color: '#ef4444', marginBottom: '1.5rem', textAlign: 'center' }}>{error}</div>}
+  return (
+    <Shell>
+      <section className="form-layout">
+        <div className="form-copy">
+          <PageIntro
+            eyebrow={isEditing ? 'Edit event' : 'Create event'}
+            title={isEditing ? 'Refine the event experience.' : 'Launch a community event students will want to join.'}
+            description="This guided flow prioritizes clarity, strong event storytelling, and future scale for richer organizer workflows."
+          />
+          <Surface className="guide-panel">
+            <h3>Recommended event creation flow</h3>
+            <div className="flow-steps">
+              <div><strong>1</strong><span>Lead with a meaningful title and cause area.</span></div>
+              <div><strong>2</strong><span>Describe the impact, expectations, and energy of the event.</span></div>
+              <div><strong>3</strong><span>Set clear logistics so students can commit quickly.</span></div>
+            </div>
+          </Surface>
+        </div>
 
-                <form onSubmit={handleSubmit} className="grid grid-cols-1">
-                    <div className="form-group">
-                        <label className="input-label">Event Title</label>
-                        <input id="event-title" name="title" className="input-field" value={formData.title} onChange={handleChange} required />
-                    </div>
+        <Surface className="form-shell surface-glow">
+          {error ? <div className="alert alert-error">{error}</div> : null}
 
-                    {/* ── AI Description Generator ── */}
-                    <div className="form-group" style={{ borderRadius: 12, padding: '1rem 1.25rem', background: 'rgba(79,70,229,0.08)', border: '1px solid rgba(79,70,229,0.3)', marginBottom: '1rem' }}>
-                        <div className="flex items-center gap-2 mb-3">
-                            <Sparkles size={16} style={{ color: '#a5b4fc' }} />
-                            <span style={{ color: '#a5b4fc', fontWeight: 600, fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                                AI Description Generator
-                            </span>
-                        </div>
-                        <label className="input-label">Brief notes for AI (optional)</label>
-                        <textarea
-                            id="ai-notes"
-                            className="input-field"
-                            rows="2"
-                            placeholder="e.g. beach cleanup, need gloves, family-friendly, 3 hours..."
-                            value={aiNotes}
-                            onChange={e => setAiNotes(e.target.value)}
-                            style={{ marginBottom: '0.75rem', resize: 'vertical' }}
-                        />
-                        <button
-                            id="ai-generate-btn"
-                            type="button"
-                            onClick={handleGenerateDescription}
-                            disabled={aiLoading}
-                            style={{
-                                display: 'inline-flex', alignItems: 'center', gap: '0.5rem',
-                                padding: '0.55rem 1.2rem', borderRadius: 8, border: 'none',
-                                background: 'linear-gradient(135deg, #4F46E5, #7C3AED)',
-                                color: 'white', fontWeight: 600, fontSize: '0.9rem',
-                                cursor: aiLoading ? 'not-allowed' : 'pointer',
-                                opacity: aiLoading ? 0.7 : 1,
-                                transition: 'all 0.3s ease',
-                                boxShadow: '0 0 12px rgba(124,58,237,0.35)',
-                            }}
-                        >
-                            {aiLoading
-                                ? <><Loader size={14} style={{ animation: 'spin 1s linear infinite' }} /> Generating…</>
-                                : <><Sparkles size={14} /> Generate with AI</>}
-                        </button>
-                        {aiSuccess && (
-                            <span style={{ marginLeft: '0.75rem', color: '#10B981', fontSize: '0.85rem', fontWeight: 500 }}>
-                                ✓ Description filled in!
-                            </span>
-                        )}
-                        {aiError && (
-                            <div style={{ color: '#ef4444', fontSize: '0.82rem', marginTop: '0.5rem' }}>{aiError}</div>
-                        )}
-                    </div>
+          <form onSubmit={handleSubmit} className="styled-form">
+            <Input
+              label="Event title"
+              name="title"
+              placeholder="Example: Weekend Park Cleanup"
+              value={formData.title}
+              onChange={handleChange}
+              required
+            />
 
-                    <div className="form-group">
-                        <label className="input-label">Description</label>
-                        <textarea id="event-description" name="description" className="input-field" rows="4" value={formData.description} onChange={handleChange} required style={{ resize: 'vertical' }} />
-                    </div>
+            <Surface className="ai-panel">
+              <div className="ai-panel-head">
+                <span className="eyebrow">AI assist</span>
+                <Sparkles size={18} />
+              </div>
+              <Textarea
+                label="Brief notes for AI"
+                rows="3"
+                value={aiNotes}
+                onChange={(event) => setAiNotes(event.target.value)}
+                placeholder="Mention the community need, tone, supplies, and expected volunteer activities."
+              />
+              <button type="button" className="btn-secondary" onClick={handleGenerateDescription} disabled={aiLoading}>
+                {aiLoading ? <Loader size={18} className="spin" /> : <Sparkles size={18} />}
+                {aiLoading ? 'Generating...' : 'Generate event description'}
+              </button>
+              {aiMessage ? <p className="muted-copy">{aiMessage}</p> : null}
+            </Surface>
 
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="form-group">
-                            <label className="input-label">Date</label>
-                            <input type="date" id="event-date" name="date" className="input-field" value={formData.date} onChange={handleChange} required />
-                        </div>
-                        <div className="form-group">
-                            <label className="input-label">Time</label>
-                            <input type="time" id="event-time" name="time" className="input-field" value={formData.time} onChange={handleChange} required />
-                        </div>
-                    </div>
+            <Textarea
+              label="Description"
+              name="description"
+              rows="5"
+              value={formData.description}
+              onChange={handleChange}
+              placeholder="Describe the cause, volunteer responsibilities, and expected impact."
+              required
+            />
 
-                    <div className="form-group">
-                        <label className="input-label">Location</label>
-                        <input id="event-location" name="location" className="input-field" value={formData.location} onChange={handleChange} required />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="form-group">
-                            <label className="input-label">Max Volunteers</label>
-                            <input type="number" id="event-max-volunteers" name="maxVolunteers" className="input-field" value={formData.maxVolunteers} onChange={handleChange} min="1" required />
-                        </div>
-                        <div className="form-group">
-                            <label className="input-label">Category</label>
-                            <select id="event-category" name="category" className="input-field" value={formData.category} onChange={handleChange}>
-                                <option value="general">General</option>
-                                <option value="education">Education</option>
-                                <option value="environment">Environment</option>
-                                <option value="health">Health</option>
-                                <option value="community">Community</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div className="flex gap-4 mt-4">
-                        <button type="button" id="cancel-btn" className="btn-secondary w-full justify-center" onClick={() => navigate(-1)}>Cancel</button>
-                        <button type="submit" id="submit-event-btn" className="btn-primary w-full justify-center text-xl" disabled={saving}>
-                            {saving ? 'Saving...' : (isEditing ? 'Update Event' : 'Create Event')}
-                        </button>
-                    </div>
-                </form>
+            <div className="field-grid">
+              <Input
+                label="Date"
+                icon={CalendarDays}
+                type="date"
+                name="date"
+                value={formData.date}
+                onChange={handleChange}
+                required
+              />
+              <Input
+                label="Time"
+                type="time"
+                name="time"
+                value={formData.time}
+                onChange={handleChange}
+                required
+              />
             </div>
 
-            <style>{`
-                @keyframes spin { to { transform: rotate(360deg); } }
-            `}</style>
-        </div>
-    );
+            <Input
+              label="Location"
+              icon={MapPin}
+              name="location"
+              placeholder="Campus, community center, or public venue"
+              value={formData.location}
+              onChange={handleChange}
+              required
+            />
+
+            <div className="field-grid">
+              <Input
+                label="Volunteer capacity"
+                icon={Users}
+                type="number"
+                name="maxVolunteers"
+                min="1"
+                value={formData.maxVolunteers}
+                onChange={handleChange}
+                required
+              />
+              <Select
+                label="Category"
+                icon={Tag}
+                name="category"
+                value={formData.category}
+                onChange={handleChange}
+              >
+                <option value="general">General</option>
+                <option value="education">Education</option>
+                <option value="environment">Environment</option>
+                <option value="health">Health</option>
+                <option value="community">Community</option>
+              </Select>
+            </div>
+
+            <div className="form-actions">
+              <button type="button" className="btn-secondary" onClick={() => navigate(-1)}>Cancel</button>
+              <button type="submit" className="btn-primary" disabled={saving}>
+                {saving ? 'Saving...' : isEditing ? 'Update event' : 'Publish event'}
+              </button>
+            </div>
+          </form>
+        </Surface>
+      </section>
+    </Shell>
+  );
 }

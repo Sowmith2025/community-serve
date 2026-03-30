@@ -1,8 +1,9 @@
-import { useState, useContext } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useContext, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { Lock, Mail, UserRound } from 'lucide-react';
 import api from '../services/api';
-import { AuthContext } from '../components/AuthContext';
-import { Lock, Mail, User } from 'lucide-react';
+import { AuthContext } from '../components/auth-context';
+import { Input, Select, Shell, Surface } from '../components/ui';
 
 export default function Register() {
   const [name, setName] = useState('');
@@ -13,99 +14,46 @@ export default function Register() {
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setError('');
     try {
       const res = await api.post('/auth/register', { name, email, password, role });
       login(res.data.user, res.data.token);
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to register');
+      setError(err.response?.data?.message || 'Failed to register.');
     }
   };
 
   return (
-    <div className="flex justify-center items-center" style={{ minHeight: '70vh' }}>
-      <div className="glass-panel w-full" style={{ maxWidth: 450, padding: '3rem 2rem' }}>
-        <div className="text-center mb-8">
-          <h2 className="text-4xl mb-2">Create Account</h2>
-          <p className="text-muted">Start making an impact in your community.</p>
+    <Shell>
+      <section className="auth-layout">
+        <div className="auth-copy">
+          <span className="eyebrow">Get started</span>
+          <h1>Join a platform built to make service feel rewarding.</h1>
+          <p>Choose the role that matches your journey and enter a bright, community-driven experience designed for long-term participation.</p>
         </div>
 
-        {error && <div style={{ color: '#ef4444', marginBottom: '1.5rem', textAlign: 'center' }}>{error}</div>}
-
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label className="input-label">Full Name</label>
-            <div style={{ position: 'relative' }}>
-              <User className="text-muted" size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
-              <input
-                type="text"
-                className="input-field"
-                style={{ paddingLeft: '3rem' }}
-                value={name}
-                onChange={e => setName(e.target.value)}
-                required
-              />
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label className="input-label">Email Address</label>
-            <div style={{ position: 'relative' }}>
-              <Mail className="text-muted" size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
-              <input
-                type="email"
-                className="input-field"
-                style={{ paddingLeft: '3rem' }}
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                required
-              />
-            </div>
-          </div>
-
-          <div className="form-group mb-8">
-            <label className="input-label">Password</label>
-            <div style={{ position: 'relative' }}>
-              <Lock className="text-muted" size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)' }} />
-              <input
-                type="password"
-                className="input-field"
-                style={{ paddingLeft: '3rem' }}
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                minLength={6}
-                required
-              />
-            </div>
-          </div>
-
-          <div className="form-group mb-8">
-            <label className="input-label">Role</label>
-            <div style={{ position: 'relative' }}>
-              <User className="text-muted" size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', zIndex: 10 }} />
-              <select
-                className="input-field"
-                style={{ paddingLeft: '3rem', appearance: 'none' }}
-                value={role}
-                onChange={e => setRole(e.target.value)}
-              >
-                <option value="student">Student</option>
-                <option value="organizer">Organizer</option>
-              </select>
-            </div>
-          </div>
-
-          <button type="submit" className="btn-primary w-full justify-center text-xl mb-4" style={{ padding: '0.875rem' }}>
-            Sign Up
-          </button>
-        </form>
-
-        <p className="text-center text-muted">
-          Already have an account? <Link to="/login" className="text-primary" style={{ textDecoration: 'none' }}>Login</Link>
-        </p>
-      </div>
-    </div>
+        <Surface className="auth-card surface-glow">
+          <h2>Create account</h2>
+          <p className="muted-copy">A smooth onboarding path for both students and organizers.</p>
+          {error ? <div className="alert alert-error">{error}</div> : null}
+          <form onSubmit={handleSubmit} className="styled-form">
+            <Input label="Full name" value={name} onChange={(event) => setName(event.target.value)} required />
+            <Input label="Email" icon={Mail} type="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
+            <Input label="Password" icon={Lock} type="password" minLength="6" value={password} onChange={(event) => setPassword(event.target.value)} required />
+            <Select label="Role" icon={UserRound} value={role} onChange={(event) => setRole(event.target.value)}>
+              <option value="student">Student</option>
+              <option value="organizer">Organizer</option>
+            </Select>
+            <button type="submit" className="btn-primary full-width">Create account</button>
+          </form>
+          <p className="muted-copy">
+            Already have an account? <Link to="/login">Sign in</Link>
+          </p>
+        </Surface>
+      </section>
+    </Shell>
   );
 }

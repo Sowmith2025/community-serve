@@ -7,6 +7,8 @@ import Register from './pages/Register';
 import EventDetails from './pages/EventDetails';
 import Dashboard from './pages/Dashboard';
 import EventForm from './pages/EventForm';
+import EventDiscovery from './pages/EventDiscovery';
+import Profile from './pages/Profile';
 
 function App() {
   return (
@@ -17,12 +19,14 @@ function App() {
           <main className="content">
             <Routes>
               <Route path="/" element={<Home />} />
+              <Route path="/events" element={<EventDiscovery />} />
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/events/new" element={<EventForm />} />
               <Route path="/events/:id/edit" element={<EventForm />} />
               <Route path="/events/:id" element={<EventDetails />} />
               <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/profile" element={<Profile />} />
             </Routes>
           </main>
         </div>

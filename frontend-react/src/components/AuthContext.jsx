@@ -1,20 +1,14 @@
-import React, { createContext, useState, useEffect } from 'react';
-import axios from 'axios';
-
-export const AuthContext = createContext();
+import React, { useState } from 'react';
+import { AuthContext } from './auth-context';
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
+  const initialUser = (() => {
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
-    if (token && userData) {
-      setUser(JSON.parse(userData));
-    }
-    setLoading(false);
-  }, []);
+    return token && userData ? JSON.parse(userData) : null;
+  })();
+  const [user, setUser] = useState(initialUser);
+  const [loading] = useState(false);
 
   const login = (userData, token) => {
     localStorage.setItem('token', token);
