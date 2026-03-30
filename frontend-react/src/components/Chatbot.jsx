@@ -12,6 +12,8 @@ export default function Chatbot() {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
+  const panelRef = useRef(null);
+  const inputRef = useRef(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -20,8 +22,35 @@ export default function Chatbot() {
   useEffect(() => {
     if (isOpen) {
       scrollToBottom();
+      inputRef.current?.focus();
     }
   }, [messages, isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return undefined;
+    }
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setIsOpen(false);
+      }
+    };
+
+    const handlePointerDown = (event) => {
+      if (panelRef.current && !panelRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('mousedown', handlePointerDown);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('mousedown', handlePointerDown);
+    };
+  }, [isOpen]);
 
   // If user is not logged in, or if we want it to be available for guests, we can pass 'guest'
   const userRole = user?.role || 'guest';
@@ -49,84 +78,96 @@ export default function Chatbot() {
 
   return (
     <>
-      {/* Navbar Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="nav-link flex items-center gap-2"
-        style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 0 }}
+        className="nav-link chatbot-toggle"
+        type="button"
+        aria-expanded={isOpen}
+        aria-controls="chatbot-panel"
+        aria-label={isOpen ? 'Close chat assistant' : 'Open chat assistant'}
       >
-        <MessageCircle size={18} /> Chat
+        <MessageCircle size={18} />
+        <span>Chat</span>
       </button>
 
-      {/* Chat Window */}
       {isOpen && (
-        <div className="glass-panel flex" style={{ position: 'fixed', width: '350px', flexDirection: 'column', zIndex: 50, top: '80px', right: '24px', height: '500px', maxHeight: 'calc(100vh - 100px)', borderColor: 'rgba(124, 58, 237, 0.3)', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)', border: '1px solid rgba(255,255,255,0.1)' }}>
-          {/* Header */}
-          <div className="flex justify-between items-center" style={{ padding: '1rem', background: 'linear-gradient(135deg, #4F46E5, #7C3AED)', color: 'white' }}>
-            <div className="flex items-center gap-2">
-              <MessageCircle size={20} />
-              <h3 style={{ margin: 0, fontSize: '1.2rem', fontWeight: 700 }}>Platform Assistant</h3>
-            </div>
-            <button onClick={() => setIsOpen(false)} style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}>
-              <X size={24} />
-            </button>
-          </div>
-
-          {/* Messages Area */}
-          <div style={{ flex: 1, overflowY: 'auto', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', background: 'rgba(255, 255, 255, 0.02)' }}>
-            <style>{`@keyframes spin { 100% { transform: rotate(360deg); } }`}</style>
-            {messages.map((msg, idx) => {
-              const isUser = msg.role === 'user';
-              return (
-                <div
-                  key={idx}
-                  style={{
-                    maxWidth: '85%',
-                    padding: '0.75rem',
-                    fontSize: '0.9rem',
-                    borderRadius: '0.75rem',
-                    alignSelf: isUser ? 'flex-end' : 'flex-start',
-                    background: isUser ? 'linear-gradient(135deg, #4F46E5, #7C3AED)' : 'rgba(255,255,255,0.08)',
-                    color: 'white',
-                    borderBottomRightRadius: isUser ? 0 : '0.75rem',
-                    borderBottomLeftRadius: isUser ? '0.75rem' : 0,
-                    border: isUser ? 'none' : '1px solid rgba(255,255,255,0.1)',
-                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                  }}
-                >
-                  {msg.content}
+        <>
+          <button
+            type="button"
+            className="chatbot-backdrop"
+            aria-label="Close chat assistant"
+            onClick={() => setIsOpen(false)}
+          />
+          <section
+            id="chatbot-panel"
+            ref={panelRef}
+            className="chatbot-panel"
+            aria-label="Community service assistant"
+          >
+            <div className="chatbot-header">
+              <div className="chatbot-header-copy">
+                <span className="chatbot-badge">AI assistant</span>
+                <div className="chatbot-title-row">
+                  <MessageCircle size={20} />
+                  <h3>Platform Assistant</h3>
                 </div>
-              );
-            })}
-            {isLoading && (
-              <div style={{ alignSelf: 'flex-start', maxWidth: '85%', borderRadius: '0.75rem', borderBottomLeftRadius: 0, padding: '0.75rem', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.08)', color: 'white', border: '1px solid rgba(255,255,255,0.1)' }}>
-                <Loader size={16} style={{ animation: 'spin 1s linear infinite', color: '#a5b4fc' }} /> 
-                <span style={{ color: '#a5b4fc' }}>Typing...</span>
+                <p>Ask about events, volunteering, or how to get started.</p>
               </div>
-            )}
-            <div ref={messagesEndRef} />
-          </div>
+              <button
+                onClick={() => setIsOpen(false)}
+                className="chatbot-close"
+                type="button"
+                aria-label="Close chat assistant"
+              >
+                <X size={20} />
+              </button>
+            </div>
 
-          {/* Input Area */}
-          <form onSubmit={handleSend} style={{ padding: '0.75rem', borderTop: '1px solid rgba(255, 255, 255, 0.1)', background: 'var(--surface)', display: 'flex', gap: '0.5rem' }}>
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask me anything..."
-              style={{ flex: 1, background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '0.5rem', padding: '0.65rem 0.85rem', fontSize: '0.9rem', color: 'white', outline: 'none', transition: 'border-color 0.2s' }}
-              onFocus={(e) => e.target.style.borderColor = '#4F46E5'}
-              onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.1)'}
-            />
-            <button 
-              type="submit" 
-              disabled={isLoading || !input.trim()}
-              style={{ padding: '0.65rem', background: 'linear-gradient(135deg, #4F46E5, #7C3AED)', border: 'none', borderRadius: '0.5rem', cursor: (isLoading || !input.trim()) ? 'not-allowed' : 'pointer', opacity: (isLoading || !input.trim()) ? 0.6 : 1, display: 'flex', alignItems: 'center', justifyItems: 'center', color: 'white' }}
-            >
-              <Send size={18} />
-            </button>
-          </form>
-        </div>
+            <div className="chatbot-messages" aria-live="polite">
+              {messages.map((msg, idx) => {
+                const isUser = msg.role === 'user';
+                return (
+                  <div
+                    key={idx}
+                    className={`chatbot-bubble ${isUser ? 'chatbot-bubble-user' : 'chatbot-bubble-assistant'}`}
+                  >
+                    {msg.content}
+                  </div>
+                );
+              })}
+              {isLoading && (
+                <div className="chatbot-bubble chatbot-bubble-assistant chatbot-status">
+                  <Loader size={16} className="spin" />
+                  <span>Thinking...</span>
+                </div>
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+
+            <form onSubmit={handleSend} className="chatbot-form">
+              <label className="chatbot-input-wrap" htmlFor="chatbot-input">
+                <input
+                  id="chatbot-input"
+                  ref={inputRef}
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder="Ask me anything..."
+                  maxLength={400}
+                  autoComplete="off"
+                />
+              </label>
+              <button
+                type="submit"
+                className="btn-primary chatbot-send"
+                disabled={isLoading || !input.trim()}
+                aria-label="Send message"
+              >
+                <Send size={18} />
+              </button>
+            </form>
+          </section>
+        </>
       )}
     </>
   );
